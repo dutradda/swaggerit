@@ -1,0 +1,6 @@
+include swaggerit/swagger_schema_extended.json
+include swaggerit/swagger_template.json
+include README.md
+include requirements.txt
+include requirements-dev.txt
+include version.py

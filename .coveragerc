@@ -1,0 +1,6 @@
+[run]
+omit =
+    version.py
+    *__init__*
+
+branch = True

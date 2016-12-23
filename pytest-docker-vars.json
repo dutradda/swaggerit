@@ -1,0 +1,14 @@
+{
+    "database": {
+        "host": "swaggerit-mysql",
+        "port": 3306,
+        "user": "root",
+        "password": "root",
+        "database": "swaggerit_test"
+    },
+    "redis": {
+        "host": "swaggerit-redis",
+	"port": 6379,
+	"db": 0
+    }
+}

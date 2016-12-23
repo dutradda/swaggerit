@@ -1,0 +1,25 @@
+version: "2"
+services:
+    mysql:
+        image: wangxian/alpine-mysql
+        container_name: swaggerit-mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+    redis:
+        image: redis:alpine
+        container_name: swaggerit-redis
+    swaggerit:
+        build: .
+        image: swaggerit
+        container_name: swaggerit
+        stdin_open: true
+        tty: true
+        depends_on:
+            - mysql
+            - redis
+        links:
+            - mysql:swaggerit-mysql
+            - redis:swaggerit-redis
+        volumes:
+            - $SWAGGERIT_DEV_HOME:/swaggerit
+            - $MYRECO_DEV_HOME:/myreco
