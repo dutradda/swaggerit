@@ -81,17 +81,35 @@ def _job_watcher(obj, jobs_id, job_hash, job, session):
 
 async def _set_job(obj, jobs_id, job_hash, job_obj, session):
     key = obj._build_jobs_key(jobs_id)
-    await session.redis_bind.hset(key, job_hash, obj._pack_obj(job_obj))
+    last_job_key = obj._build_last_job_key(jobs_id)
+    job_obj = obj._pack_obj(job_obj)
+
+    await session.redis_bind.hset(key, job_hash, job_obj)
     if await session.redis_bind.ttl(key) < 0:
         await session.redis_bind.expire(key, 7*24*60*60)
+    await session.redis_bind.set(last_job_key, job_obj)
 
 
 def _build_jobs_key(obj, jobs_id):
     return jobs_id + '_jobs'
 
 
+def _build_last_job_key(obj, jobs_id):
+    return jobs_id + '_last'
+
+
 async def _get_job(obj, jobs_id, req, session):
-    job_obj = await session.redis_bind.hget(obj._build_jobs_key(jobs_id), req.query['job_hash'])
+    job_hash = req.query.get('job_hash')
+
+    if job_hash is None:
+        job_obj = await obj._get_all_jobs(jobs_id, req, session)
+
+    elif job_hash == 'last':
+        job_obj = await session.redis_bind.get(obj._build_last_job_key(jobs_id))
+
+    else:
+        job_obj = await session.redis_bind.hget(obj._build_jobs_key(jobs_id), job_hash)
+
     if job_obj is None:
         return obj._build_response(404)
     else:
@@ -102,16 +120,16 @@ async def _get_all_jobs(obj, jobs_id, req, session):
     jobs = await session.redis_bind.hgetall(obj._build_jobs_key(jobs_id))
 
     if not jobs:
-        return obj._build_response(404)
+        return None
 
     else:
-        jobs = obj._unpack_obj(jobs)
         all_jobs = defaultdict(dict)
 
         for job_id, job in jobs.items():
-            all_jobs[job['status']][job_id] = job
+            job = obj._unpack_obj(job)
+            all_jobs[job.pop('status')][job_id] = job
 
-        return obj._build_response(200, obj._pack_obj(all_jobs))
+        return obj._pack_obj(all_jobs).encode()
 
 
 def _copy_session(obj, session):
@@ -136,6 +154,9 @@ class _ModelJobsMeta(_ModelSwaggerItMeta):
 
     def _build_jobs_key(cls, jobs_id):
         return _build_jobs_key(cls, jobs_id)
+
+    def _build_last_job_key(cls, jobs_id):
+        return _build_last_job_key(cls, jobs_id)
 
     async def _get_job(cls, jobs_id, req, session):
         return await _get_job(cls, jobs_id, req, session)

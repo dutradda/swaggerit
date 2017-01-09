@@ -43,8 +43,7 @@ class ModelAioHttpJobs(JobsModel):
                 'parameters': [{
                     'name': 'job_hash',
                     'in': 'query',
-                    'type': 'string',
-                    'required': True
+                    'type': 'string'
                 }],
                 'operationId': 'get_job',
                 'responses': {
@@ -63,8 +62,7 @@ class ModelAioHttpJobs(JobsModel):
                 'parameters': [{
                     'name': 'job_hash',
                     'in': 'query',
-                    'type': 'string',
-                    'required': True
+                    'type': 'string'
                 }],
                 'operationId': 'get_sync_job',
                 'responses': {
@@ -126,6 +124,36 @@ class TestModelAioHttpJobs(object):
         assert (await resp.json())['result'] == 'test'
         assert (await resp.json())['status'] == 'done'
 
+    async def test_get_last(self, client):
+        random.seed(0)
+        client = await client
+        await client.post('/')
+
+        query = {'job_hash': 'last'}
+        while True:
+            resp = await client.get('/', params=query)
+            if (await resp.json())['status'] != 'running':
+                break
+
+        assert resp.status == 200
+        assert (await resp.json())['result'] == 'test'
+        assert (await resp.json())['status'] == 'done'
+
+
+    async def test_get_all(self, client):
+        random.seed(0)
+        client = await client
+        await client.post('/')
+
+        while True:
+            resp = await client.get('/')
+            if not 'running' in (await resp.json()):
+                break
+
+        assert resp.status == 200
+        assert (await resp.json())['done']['e3e70682c2094cac629f6fbed82c07cd']['result'] == 'test'
+
+
     async def test_get_error(self, client, request):
         test_func = ModelAioHttpJobs._test
         def fin():
@@ -173,6 +201,34 @@ class TestModelAioHttpJobsSync(object):
         assert resp.status == 200
         assert (await resp.json())['result'] == 'test'
         assert (await resp.json())['status'] == 'done'
+
+    async def test_get_last(self, client):
+        random.seed(0)
+        client = await client
+        await client.post('/sync')
+
+        query = {'job_hash': 'last'}
+        while True:
+            resp = await client.get('/sync', params=query)
+            if (await resp.json())['status'] != 'running':
+                break
+
+        assert resp.status == 200
+        assert (await resp.json())['result'] == 'test'
+        assert (await resp.json())['status'] == 'done'
+
+    async def test_get_all(self, client):
+        random.seed(0)
+        client = await client
+        await client.post('/sync')
+
+        while True:
+            resp = await client.get('/sync')
+            if not 'running' in (await resp.json()):
+                break
+
+        assert resp.status == 200
+        assert (await resp.json())['done']['e3e70682c2094cac629f6fbed82c07cd']['result'] == 'test'
 
     async def test_get_error(self, client, request):
         test_func = ModelAioHttpJobs._sync_test

@@ -23,7 +23,7 @@
 
 from swaggerit.models.orm._jobs_meta import (
     _create_job, _job_watcher, _set_job, _build_jobs_key,
-    _get_job, _get_all_jobs, _copy_session
+    _build_last_job_key, _get_job, _get_all_jobs, _copy_session
 )
 from swaggerit.models.swaggerit import SwaggerItModel
 from types import MethodType
@@ -45,6 +45,9 @@ class JobsModel(SwaggerItModel):
 
     def _build_jobs_key(cls, jobs_id):
         return _build_jobs_key(cls, jobs_id)
+
+    def _build_last_job_key(cls, jobs_id):
+        return _build_last_job_key(cls, jobs_id)
 
     async def _get_job(cls, jobs_id, req, session):
         return await _get_job(cls, jobs_id, req, session)
