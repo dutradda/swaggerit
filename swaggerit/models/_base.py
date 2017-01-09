@@ -78,6 +78,6 @@ class _ModelBase(object):
     def __init__(self, key_sufix=None):
         name = type(self).__name__
         if key_sufix is not None:
-            name += f'_{key_sufix}'
+            name += '_{}'.format(key_sufix)
 
         _init(self, name)
