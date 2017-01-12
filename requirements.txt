@@ -1,4 +1,4 @@
-SQLAlchemy==1.1.1
+SQLAlchemy==1.1.4
 jsonschema==2.5.1
 ujson==1.35
 hiredis==0.2.0
