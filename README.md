@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
 #### Running:
 ```
-$ python3.5 swaggerit_example.py
+$ python3.6 swaggerit_example.py
 ======== Running on http://0.0.0.0:10000 ========
 (Press CTRL+C to quit)
 ```
