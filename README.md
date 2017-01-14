@@ -2,7 +2,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/dutradda/swaggerit/badge.svg?branch=master)](https://coveralls.io/github/dutradda/swaggerit?branch=master)
 
 # swaggerit
-Create a swagger API from a set of classes
+Create a swagger API from a set of classes.
 
 
 ### Main features:
