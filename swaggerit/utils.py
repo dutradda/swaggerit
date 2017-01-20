@@ -49,7 +49,7 @@ def get_dir_path(filename):
     return os.path.dirname(os.path.abspath(filename))
 
 
-def get_model_schema(filename, schema_name='schema.json'):
+def get_model_schema(filename, schema_name='swagger_schema.json'):
     return ujson.load(open(os.path.join(get_dir_path(filename), schema_name)))
 
 
