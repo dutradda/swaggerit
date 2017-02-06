@@ -95,44 +95,14 @@ class SwaggerAPI(metaclass=ABCMeta):
         self._models.add(model)
         self._set_model_routes(model)
         model.__api__ = self
-        model_paths, definitions = self._get_model_paths_and_definitions(model)
-        self.swagger_json['paths'].update(model_paths)
-        self.swagger_json['definitions'].update(definitions)
-
-    def _get_model_paths_and_definitions(self, model, format_=True):
         model_paths = deepcopy(model.__schema__)
-        if format_:
-            self._validate_model_paths(model_paths, model.__name__)
+        model_paths.pop('definitions', None)
+        model_definitions = deepcopy(model.__schema__.get('definitions', {}))
 
-        definitions = {}
-        for definition, values in model_paths.pop('definitions', {}).items():
-            definitions['{}.{}'.format(model.__name__, definition)] = values
-
-        if format_:
-            self._format_operations_names(model_paths, model.__name__)
-            model_paths = self._format_definitions_names(model_paths, model.__name__)
-
-        return model_paths, definitions
-
-    def _validate_model_paths(self, model_paths, model_name):
-        for path in model_paths:
-            if path in self.swagger_json['paths']:
-                raise SwaggerItAPIError("Duplicated path '{}' for model '{}'"\
-                                        .format(path, model_name))
-
-    def _format_operations_names(self, model_paths, model_name):
-        for path_name, path in model_paths.items():
-            for method_name, method in path.items():
-                if not isinstance(method, list):
-                    op_id = method['operationId']
-                    method['operationId'] = '{}.{}'.format(model_name, op_id)
-
-    def _format_definitions_names(self, model_paths, model_name):
-        json_paths = ujson.dumps(model_paths, escape_forward_slashes=False)
-        json_paths = re.sub(r'"#/definitions/([a-zA-Z0-9_]+)"',
-                r'"#/definitions/{}.\1"'.format(model_name),
-                json_paths)
-        return ujson.loads(json_paths)
+        self._validate_model('paths', model_paths, model.__name__)
+        self._validate_model('definitions', model_definitions, model.__name__)
+        self.swagger_json['paths'].update(model_paths)
+        self.swagger_json['definitions'].update(model_definitions)
 
     def _set_model_routes(self, model):
         for path, method, handler in self.get_model_methods(model):
@@ -155,11 +125,17 @@ class SwaggerAPI(metaclass=ABCMeta):
                         parameters.extend(all_methods_parameters)
 
                         method_schema['parameters'] = parameters
-                        operation = getattr(model, method_schema['operationId'])
+                        operation = getattr(model, method_schema['operationId'].split('.')[-1])
                         handler = SwaggerMethod(operation, method_schema,
                                                definitions, model.__schema_dir__,
                                                authorizer=self.authorizer)
                         yield path, method, handler
+
+    def _validate_model(self, key_name, keys, model_name):
+        for key in keys:
+            if key in self.swagger_json[key_name]:
+                raise SwaggerItAPIError("Duplicated {} '{}' for model '{}'"\
+                                        .format(key_name, key, model_name))
 
     @abstractmethod
     def _set_handler_decorator(self, handler):

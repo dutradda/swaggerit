@@ -28,15 +28,45 @@ from swaggerit.utils import get_module_path
 from swaggerit.response import SwaggerResponse
 from types import MethodType
 import re
+import ujson
 
 
 def _init(obj):
     SWAGGER_VALIDATOR.validate(obj.__schema__)
     _validate_operation(obj)
+
+    if isinstance(obj, type):
+        model_name = obj.__name__
+    else:
+        model_name = type(obj).__name__
+
+    _format_definitions_names(obj, model_name)
+    _format_operations_names(obj, model_name)
+
     obj.__api__ = getattr(obj, '__api__', None)
     obj.__schema_dir__ = getattr(obj, '__schema_dir__', get_module_path(obj))
-    _set_default_options(obj)
+    _set_default_options(obj, model_name)
     obj._build_response = MethodType(_build_response, obj)
+
+
+def _format_definitions_names(obj, model_name):
+    definitions = obj.__schema__.get('definitions', {})
+    definitions_keys = list(definitions.keys())
+    for def_name in definitions_keys:
+        definitions['{}.{}'.format(model_name, def_name)] = definitions.pop(def_name)
+
+    schema = ujson.dumps(obj.__schema__, escape_forward_slashes=False)
+    schema = re.sub(r'("\$ref":"#/definitions/)([^/"]+)', r'\1{}.\2'.format(model_name), schema)
+    obj.__schema__ = ujson.loads(schema)
+
+
+def _format_operations_names(obj, model_name):
+    for path_name, path in obj.__schema__.items():
+        if path_name != 'definitions':
+            for method_name, method in path.items():
+                if method_name != 'parameters':
+                    op_id = method['operationId']
+                    method['operationId'] = '{}.{}'.format(model_name, op_id)
 
 
 def _validate_operation(obj):
@@ -50,7 +80,7 @@ def _validate_operation(obj):
                             "'operationId' '{}' was not found".format(operation_id))
 
 
-def _set_default_options(obj):
+def _set_default_options(obj, model_name):
     for path, schema in obj.__schema__.items():
         if not 'options' in schema and path != 'definitions':
             valid_methods = [k.upper() for k in schema.keys()]
@@ -62,7 +92,7 @@ def _set_default_options(obj):
 
             options_method = MethodType(_options_operation, obj)
             setattr(obj, options_operation_name, options_method)
-            schema['options'] = _build_options_schema(options_operation_name)
+            schema['options'] = _build_options_schema(options_operation_name, model_name)
 
 
 def _build_response(obj, status_code, body=None, headers={}):
@@ -73,9 +103,9 @@ async def _options_operation(obj, req, sess):
     return SwaggerResponse(200, headers, None, None)
 
 
-def _build_options_schema(options_operation_name):
+def _build_options_schema(options_operation_name, model_name):
     return {
-        'operationId': options_operation_name,
+        'operationId': '{}.{}'.format(model_name, options_operation_name),
         'responses': {
             '204': {
                 'description': 'No Content',

@@ -68,7 +68,15 @@ class SwaggerMethod(object):
                 self._set_parameter_on_schema(parameter, query_schema)
 
             elif parameter['in'] == 'header':
-                self._set_parameter_on_schema(parameter, headers_schema)
+                if parameter['name'].lower() != 'authorization':
+                    self._set_parameter_on_schema(parameter, headers_schema)
+
+                elif self.authorizer == None:
+                        raise ValidationError("'authorizer' is a required attribute when "
+                                              "'Authorization' header is setted.")
+
+                else:
+                    self.auth_required = self._requires_auth(parameter)
 
         if path_schema['properties']:
             self._path_validator = build_validator(path_schema, self._schema_dir)
@@ -77,16 +85,6 @@ class SwaggerMethod(object):
             self._query_validator = build_validator(query_schema, self._schema_dir)
 
         if headers_schema['properties']:
-            has_auth = ('Authorization' in headers_schema['properties'])
-
-            if has_auth and self.authorizer == None:
-                raise ValidationError("'authorizer' is a required attribute when "
-                                      "'Authorization' header is setted.")
-
-
-            self.auth_required = (has_auth
-                and ('Authorization' in headers_schema.get('required', [])))
-
             self._headers_validator = build_validator(headers_schema, self._schema_dir)
 
     def _build_default_schema(self):
@@ -110,6 +108,9 @@ class SwaggerMethod(object):
             schema['required'].append(name)
 
         schema['properties'][name] = property_
+
+    def _requires_auth(self, param):
+            return self.auth_required or param.get('required')
 
     async def __call__(self, req, session):
         denied = await self._authorize(req, session)
