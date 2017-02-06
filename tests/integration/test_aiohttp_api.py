@@ -86,7 +86,7 @@ class TestAioHttpAPI(object):
         assert await resp.json() == [{'id': 1, 'm2_id': None, 'model2': None}]
 
     async def test_get_swagger_json(self, client, session):
-        resp = await (await client).get( '/swagger.json')
+        resp = await (await client).get( '/doc/swagger.json')
         assert resp.status == 200
         assert await resp.json() == {
             'swagger': '2.0',

@@ -39,7 +39,7 @@ class SwaggerAPI(metaclass=ABCMeta):
 
     def __init__(self, models, sqlalchemy_bind=None, redis_bind=None,
                  swagger_json_template=None, title=None, version='1.0.0',
-                 authorizer=None, get_swagger_req_auth=True):
+                 authorizer=None, get_swagger_req_auth=True, swagger_doc_url='doc'):
         set_logger(self)
         self.authorizer = authorizer
         self._sqlalchemy_bind = sqlalchemy_bind
@@ -48,10 +48,7 @@ class SwaggerAPI(metaclass=ABCMeta):
 
         self._set_swagger_json(swagger_json_template, title, version)
         self._set_models(models)
-        self._set_route(
-            self._format_path('/swagger.json'), 'get',
-            self._set_handler_decorator(self._get_swagger_json)
-        )
+        self._set_swagger_doc(swagger_doc_url)
 
     def _set_swagger_json(self, swagger_json_template, title, version):
         self._validate_metadata(swagger_json_template, title, version)
@@ -218,11 +215,12 @@ class SwaggerAPI(metaclass=ABCMeta):
         if hasattr(session, 'close'):
             session.close()
 
-    async def _get_swagger_json(self, req, session):
+    async def _authorize(self, req, session):
         if self.authorizer and self._get_swagger_req_auth:
             response = await self.authorizer(req, session)
             if response is not None:
                 return response
 
-        return SwaggerResponse(200, headers={'content-type': 'application/json'},
-                               body=ujson.dumps(self.swagger_json))
+    @abstractmethod
+    def _set_swagger_doc(self, swagger_doc_url):
+        pass
