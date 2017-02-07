@@ -27,7 +27,6 @@ from aiohttp.web import Application, Response as AioHttpResponse
 from aiohttp_swagger import setup_swagger
 from urllib.parse import parse_qs
 from tempfile import NamedTemporaryFile
-import yaml
 
 
 class AioHttpAPI(SwaggerAPI, Application):
@@ -72,18 +71,11 @@ class AioHttpAPI(SwaggerAPI, Application):
                         headers=resp.headers)
 
     def _set_swagger_doc(self, swagger_doc_url):
-        swagger_file = self._get_swagger_yaml_file()
         setup_swagger(self,
             swagger_url=swagger_doc_url,
-            swagger_from_file=swagger_file.name,
+            swagger_info=self.swagger_json,
             swagger_def_decor=self._swagger_doc_decorator,
             swagger_home_decor=self._swagger_doc_decorator)
-
-    def _get_swagger_yaml_file(self):
-        f = NamedTemporaryFile()
-        f.write(yaml.dump(self.swagger_json).encode())
-        f.seek(0)
-        return f
 
     def _swagger_doc_decorator(self, func):
         async def decorator(req):
