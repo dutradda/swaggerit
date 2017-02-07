@@ -43,6 +43,10 @@ https://github.com/dutradda/swaggerit
 install_requires = []
 with open('requirements.txt') as requirements:
     install_requires = requirements.readlines()
+    aiohttp_swagger_url = install_requires.pop()
+    aiohttp_swagger_url = aiohttp_swagger_url.strip('\n')
+    aiohttp_swagger_url += '#egg=aiohttp-swagger-ext-1.1.0b'
+    install_requires.append('aiohttp-swagger-ext')
 
 
 tests_require = []
@@ -69,6 +73,7 @@ setup(
     ],
     tests_require=tests_require,
     install_requires=install_requires,
+    dependency_links=[aiohttp_swagger_url],
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Development Status :: 3 - Alpha',

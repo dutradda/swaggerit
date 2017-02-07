@@ -4,5 +4,5 @@ ujson==1.35
 hiredis==0.2.0
 aioredis==0.2.9
 aiohttp==1.2.0
-https://github.com/dutradda/aiohttp-swagger/archive/adding_decorators_to_home_and_def_functions.tar.gz
 uvloop==0.7.1
+https://github.com/dutradda/aiohttp-swagger/archive/extended.tar.gz
