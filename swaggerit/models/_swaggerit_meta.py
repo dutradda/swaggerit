@@ -83,14 +83,14 @@ def _validate_operation(obj):
 def _set_default_options(obj, model_name):
     for path, schema in obj.__schema__.items():
         if not 'options' in schema and path != 'definitions':
-            valid_methods = [k.upper() for k in schema.keys()]
-            headers = {'Allow': ', '.join(valid_methods)}
             path_norm = path.strip('/').replace('/', '_')
             path_norm = re.sub(r'(\{|<)([a-zA-Z_0-9-]+)(\}|>)', r'\2', path_norm)
             options_operation_name = '{}_{}'.format('options', path_norm) \
                 if path_norm else 'options'
 
-            options_method = MethodType(_options_operation, obj)
+            valid_methods = [k.upper() for k in schema.keys()]
+            headers = {'Allow': ', '.join(valid_methods)}
+            options_method = MethodType(_options_operation_decor(headers), obj)
             setattr(obj, options_operation_name, options_method)
             schema['options'] = _build_options_schema(options_operation_name, model_name)
 
@@ -99,8 +99,11 @@ def _build_response(obj, status_code, body=None, headers={}):
     return SwaggerResponse(status_code, {}, body)
 
 
-async def _options_operation(obj, req, sess):
-    return SwaggerResponse(200, headers, None, None)
+def _options_operation_decor(headers):
+    async def _options_operation(obj, req, sess):
+        return SwaggerResponse(200, headers)
+
+    return _options_operation
 
 
 def _build_options_schema(options_operation_name, model_name):
