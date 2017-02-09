@@ -159,14 +159,27 @@ class SwaggerMethod(object):
             return resp
 
     def _valdation_error_to_response(self, error, headers):
+        if error.absolute_path or error.absolute_schema_path:
+            message = '{}. Failed validating instance{} for schema{}'.format(
+                error.message,
+                self._format_error_path(error.absolute_path),
+                self._format_error_path(error.absolute_schema_path)
+            )
+        else:
+            message = error.message
+
         body = {
-            'message': error.message
+            'message': message
         }
         if isinstance(error.schema, dict) and len(error.schema):
             body['schema'] = error.schema
         if error.instance:
             body['instance'] = error.instance
         return SwaggerResponse(400, body=ujson.dumps(body), headers=headers)
+
+    def _format_error_path(self, path):
+        path = [str(p) for p in path]
+        return ("['" + "']['".join(path) + "']") if path else ''
 
     async def _authorize(self, req, session):
         authorization = req.headers.get('authorization')

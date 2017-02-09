@@ -133,7 +133,7 @@ class TestMethodErrorHandlingPost(object):
         assert resp.status_code == 400
         assert ujson.loads(resp.body) == {
             'instance': 'test',
-            'message': "'test' is not of type 'array'",
+            'message': "'test' is not of type 'array'. Failed validating instance for schema['type']",
             'schema': {
                 'type': 'array'
             }
