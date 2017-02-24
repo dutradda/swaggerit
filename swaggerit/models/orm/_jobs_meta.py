@@ -135,6 +135,7 @@ async def _get_all_jobs(obj, jobs_id, req, session):
 def _copy_session(obj, session):
     return type(session)(bind=session.bind.engine.connect(),
                          redis_bind=session.redis_bind,
+                         elsearch_bind=session.elsearch_bind,
                          loop=session.loop)
 
 

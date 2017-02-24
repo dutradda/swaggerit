@@ -10,5 +10,10 @@
         "host": "localhost",
         "port": 6379,
         "db": 5
+    },
+    "elsearch": {
+        "host": "localhost",
+        "port": 9200,
+        "index": "swaggerit_test"
     }
 }

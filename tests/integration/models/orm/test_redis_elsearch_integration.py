@@ -23,10 +23,11 @@
 
 
 from swaggerit.models.orm.factory import FactoryOrmModels
+from time import sleep
 import pytest
 
 
-ModelTest = FactoryOrmModels.make_redis('ModelTest', ['id'])
+ModelTest = FactoryOrmModels.make_redis_elsearch('ModelTest', ['id'], use_elsearch=True)
 
 
 @pytest.fixture
@@ -40,7 +41,7 @@ def obj():
     }
 
 
-class TestModelRedisPost(object):
+class TestModelRedisElSearchPost(object):
 
     async def test_insert(self, obj, session):
         assert await ModelTest.insert(session, obj) == [obj]
@@ -65,3 +66,28 @@ class TestModelRedisPost(object):
     async def test_get(self, obj, session):
         await ModelTest.insert(session, obj)
         assert await ModelTest.get(session, '1') == [obj]
+
+    async def test_search(self, obj, session):
+        await ModelTest.insert(session, obj)
+        await session.elsearch_bind.refresh_index()
+        assert list(await ModelTest.search(session, 'test')) == [obj]
+
+    async def test_search_deleted(self, obj, session):
+        await ModelTest.insert(session, obj)
+        await session.elsearch_bind.refresh_index()
+        assert list(await ModelTest.search(session, 'test')) == [obj]
+
+        await ModelTest.delete(session, '1')
+        await session.elsearch_bind.refresh_index()
+        assert list(await ModelTest.search(session, 'test')) == []
+
+    async def test_search_updated(self, obj, session):
+        await ModelTest.insert(session, obj)
+        await session.elsearch_bind.refresh_index()
+        assert list(await ModelTest.search(session, 'test')) == [obj]
+        assert list(await ModelTest.search(session, 'testing')) == []
+
+        obj['field1'] = 'testing'
+        await ModelTest.update(session, obj)
+        await session.elsearch_bind.refresh_index()
+        assert list(await ModelTest.search(session, 'testing')) == [obj]

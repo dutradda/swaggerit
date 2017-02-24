@@ -95,3 +95,8 @@ class _ModelSwaggerItOrmMeta(_ModelJobsMeta):
     async def swagger_get_all(cls, req, session):
         operation = partial(cls.get, session, **req.query)
         return await cls._execute_operation(operation, 200)
+
+    async def swagger_search(cls, req, session):
+        method = getattr(cls, 'search', lambda *args, **kwargs: None)
+        operation = partial(method, session, **req.query)
+        return await cls._execute_operation(operation, 200)

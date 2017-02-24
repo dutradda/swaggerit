@@ -22,12 +22,14 @@
 
 
 from swaggerit.models.orm._redis_base import _ModelRedisBaseMeta
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from copy import deepcopy
+import ujson
 
 
-class ModelRedisMeta(_ModelRedisBaseMeta):
+class ModelRedisElSearchMeta(_ModelRedisBaseMeta):
     CHUNKS = 100
+    __use_elsearch__ = False
 
     async def insert(cls, session, objs, **kwargs):
         input_ = deepcopy(objs)
@@ -42,11 +44,18 @@ class ModelRedisMeta(_ModelRedisBaseMeta):
 
             if counter == cls.CHUNKS:
                 await session.redis_bind.hmset_dict(cls.__key__, ids_objs_map)
+
+                if cls.__use_elsearch__:
+                    await session.elsearch_bind.bulk_create_dict(cls.__key__, ids_objs_map)
+
                 ids_objs_map = dict()
                 counter = 0
 
         if ids_objs_map:
             await session.redis_bind.hmset_dict(cls.__key__, ids_objs_map)
+
+            if cls.__use_elsearch__:
+                await session.elsearch_bind.bulk_create_dict(cls.__key__, ids_objs_map)
 
         return objs
 
@@ -84,14 +93,24 @@ class ModelRedisMeta(_ModelRedisBaseMeta):
 
                 if counter == cls.CHUNKS:
                     await session.redis_bind.hmset_dict(cls.__key__, set_map)
+
+                    if cls.__use_elsearch__:
+                        await session.elsearch_bind.bulk_update_dict(cls.__key__, set_map)
+
                     set_map = OrderedDict()
                     counter = 0
 
             if set_map:
                 await session.redis_bind.hmset_dict(cls.__key__, set_map)
 
+                if cls.__use_elsearch__:
+                    await session.elsearch_bind.bulk_update_dict(cls.__key__, set_map)
+
         if keys_objs_to_del:
             await session.redis_bind.hdel(cls.__key__, *keys_objs_to_del.keys())
+
+            if cls.__use_elsearch__:
+                await session.elsearch_bind.bulk_delete(cls.__key__, keys_objs_to_del.keys())
 
         return list(keys_objs_map.values()) or list(keys_objs_to_del.values())
 
@@ -107,7 +126,12 @@ class ModelRedisMeta(_ModelRedisBaseMeta):
     async def delete(cls, session, ids, **kwargs):
         keys = cls._to_list(ids)
         if keys:
-            return await session.redis_bind.hdel(cls.__key__, *keys)
+            ret = await session.redis_bind.hdel(cls.__key__, *keys)
+
+            if cls.__use_elsearch__:
+                await session.elsearch_bind.bulk_delete(cls.__key__, keys)
+
+            return ret
 
     async def get(cls, session, ids=None, limit=None, offset=None, **kwargs):
         if limit is not None and offset is not None:
@@ -125,3 +149,17 @@ class ModelRedisMeta(_ModelRedisBaseMeta):
         else:
             ids = cls._to_list(ids)
             return cls._unpack_objs(await session.redis_bind.hmget(cls.__key__, *ids[offset:limit]))
+
+    async def search(cls, session, pattern, page=0, size=100):
+        if cls.__use_elsearch__:
+            result = await session.elsearch_bind.search(cls.__key__, pattern, page, size)
+            result = result.get('hits', {}).get('hits', [])
+            final_result = deque()
+
+            while result:
+                final_result.appendleft(result.pop()['_source'])
+
+            return final_result
+
+        else:
+            return []

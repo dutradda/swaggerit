@@ -10,5 +10,10 @@
         "host": "swaggerit-redis",
 	"port": 6379,
 	"db": 0
+    },
+    "elsearch": {
+        "host": "localhost",
+        "port": 9200,
+        "index": "swaggerit_test"
     }
 }

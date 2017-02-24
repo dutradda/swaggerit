@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 
-from swaggerit.models.orm.redis import ModelRedisMeta
+from swaggerit.models.orm.redis_elsearch import ModelRedisElSearchMeta
 from swaggerit.models.orm.sqlalchemy_redis import (
     ModelSQLAlchemyRedisBaseMeta, ModelSQLAlchemyRedisBaseSuper)
 from sqlalchemy.ext.declarative import declarative_base
@@ -31,10 +31,16 @@ from types import MethodType
 class FactoryOrmModels(object):
 
     @classmethod
-    def make_redis(cls, class_name, id_names, key=None, base=object,
-                   schema=None, key_separator=None, metaclass=ModelRedisMeta):
+    def make_redis_elsearch(
+            cls, class_name, id_names, key=None, base=object,
+            schema=None, key_separator=None,
+            metaclass=ModelRedisElSearchMeta, use_elsearch=False
+        ):
 
-        attributes = {'__id_names__': sorted(tuple(id_names))}
+        attributes = {
+            '__id_names__': sorted(tuple(id_names)),
+            '__use_elsearch__': use_elsearch
+        }
 
         if key is not None:
             attributes['__key__'] = key

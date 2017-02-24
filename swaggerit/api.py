@@ -38,12 +38,14 @@ import re
 class SwaggerAPI(metaclass=ABCMeta):
 
     def __init__(self, models, sqlalchemy_bind=None, redis_bind=None,
-                 swagger_json_template=None, title=None, version='1.0.0',
-                 authorizer=None, get_swagger_req_auth=True, swagger_doc_url='doc'):
+                 elsearch_bind=None, swagger_json_template=None, title=None,
+                 version='1.0.0', authorizer=None, get_swagger_req_auth=True,
+                 swagger_doc_url='doc'):
         set_logger(self)
         self.authorizer = authorizer
         self._sqlalchemy_bind = sqlalchemy_bind
         self._redis_bind = redis_bind
+        self._elsearch_bind = elsearch_bind
         self._get_swagger_req_auth = get_swagger_req_auth
 
         self._set_swagger_json(swagger_json_template, title, version)
@@ -185,6 +187,7 @@ class SwaggerAPI(metaclass=ABCMeta):
     def _build_session(self):
         return Session(bind=self._sqlalchemy_bind,
                        redis_bind=self._redis_bind,
+                       elsearch_bind=self._elsearch_bind,
                        loop=self.loop)
 
     def _destroy_session(self, session):

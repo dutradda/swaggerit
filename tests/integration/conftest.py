@@ -23,6 +23,7 @@
 
 from swaggerit.aiohttp_api import AioHttpAPI
 from swaggerit.models.orm.session import Session
+from swaggerit.models.orm.binds import ElSearchBind
 from tests.integration.fixtures import ModelSQLAlchemyRedisBase
 from sqlalchemy import create_engine
 from aioredis import create_redis
@@ -49,6 +50,14 @@ def redis(variables, loop):
         loop=loop
     )
     return loop.run_until_complete(coro)
+
+
+@pytest.fixture()
+def elsearch(variables, loop):
+    es = ElSearchBind(**variables['elsearch'])
+    loop.run_until_complete(es.create_index())
+    loop.run_until_complete(es.flush_index())
+    return es
 
 
 @pytest.fixture(scope='session')
@@ -84,7 +93,7 @@ def engine(variables, pymysql_conn):
 
 
 @pytest.fixture
-def session(variables, redis, engine, pymysql_conn, loop):
+def session(variables, redis, elsearch, engine, pymysql_conn, loop):
     ModelSQLAlchemyRedisBase.metadata.bind = engine
     ModelSQLAlchemyRedisBase.metadata.create_all()
 
@@ -100,7 +109,7 @@ def session(variables, redis, engine, pymysql_conn, loop):
         cursor.execute('SET FOREIGN_KEY_CHECKS = 1;')
     pymysql_conn.commit()
     loop.run_until_complete(redis.flushdb())
-    session = Session(bind=engine, redis_bind=redis, loop=loop)
+    session = Session(bind=engine, redis_bind=redis, loop=loop, elsearch_bind=elsearch)
     yield session
     session.close()
 

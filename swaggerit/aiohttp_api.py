@@ -32,12 +32,17 @@ from tempfile import NamedTemporaryFile
 class AioHttpAPI(SwaggerAPI, Application):
 
     def __init__(self, models, *, sqlalchemy_bind=None, redis_bind=None,
-                 swagger_json_template=None, title=None, version='1.0.0',
-                 authorizer=None, get_swagger_req_auth=True, loop=None,
-                 debug=False, swagger_doc_url='doc'):
+                 elsearch_bind=None, swagger_json_template=None, title=None,
+                 version='1.0.0', authorizer=None, get_swagger_req_auth=True,
+                 loop=None, debug=False, swagger_doc_url='doc'):
         Application.__init__(self, loop=loop, debug=debug)
-        SwaggerAPI.__init__(self, models, sqlalchemy_bind, redis_bind, swagger_json_template,
-                            title, version, authorizer, get_swagger_req_auth, swagger_doc_url)
+        SwaggerAPI.__init__(
+            self, models, sqlalchemy_bind,
+            redis_bind, elsearch_bind,
+            swagger_json_template, title,
+            version, authorizer,
+            get_swagger_req_auth, swagger_doc_url
+        )
 
     def _set_handler_decorator(self, method):
         method = self._method_decorator(method)
