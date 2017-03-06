@@ -21,39 +21,13 @@
 # SOFTWARE.
 
 
-from swaggerit.models.orm._jobs_meta import (
-    _create_job, _job_watcher, _set_job, _build_jobs_key,
-    _build_last_job_key, _get_job, _get_all_jobs, _copy_session
-)
+from swaggerit.models.orm._jobs_meta import _init
 from swaggerit.models.swaggerit import SwaggerItModel
 from types import MethodType
 
 
 class JobsModel(SwaggerItModel):
 
-    def __init__(self):
-        SwaggerItModel.__init__(self)
-
-    def _create_job(cls, func, jobs_id, req, session, *arg, **kwargs):
-        return _create_job(cls, func, jobs_id, req, session, *arg, **kwargs)
-
-    def _job_watcher(cls, jobs_id, job_hash, job, session):
-        return _job_watcher(cls, jobs_id, job_hash, job, session)
-
-    async def _set_job(cls, jobs_id, job_hash, job_obj, session):
-        return await _set_job(cls, jobs_id, job_hash, job_obj, session)
-
-    def _build_jobs_key(cls, jobs_id):
-        return _build_jobs_key(cls, jobs_id)
-
-    def _build_last_job_key(cls, jobs_id):
-        return _build_last_job_key(cls, jobs_id)
-
-    async def _get_job(cls, jobs_id, req, session):
-        return await _get_job(cls, jobs_id, req, session)
-
-    async def _get_all_jobs(cls, jobs_id, req, session):
-        return await _get_all_jobs(cls, jobs_id, req, session)
-
-    def _copy_session(cls, session):
-        return _copy_session(cls, session)
+    def __init__(self, key_sufix=None, schema=None):
+        SwaggerItModel.__init__(self, key_sufix, schema)
+        _init(self)

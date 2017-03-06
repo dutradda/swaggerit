@@ -31,6 +31,19 @@ import ujson
 import re
 
 
+class _ModelBaseMeta(type):
+    __all_models__ = _all_models
+
+    def __init__(cls, name, bases_classes, attributes):
+        _init(cls, name)
+
+    def get_key(cls, sufix=None):
+        if not sufix or sufix == cls.__key__:
+            return cls.__key__
+
+        return '{}_{}'.format(cls.__key__, sufix)
+
+
 def _init(obj, name):
     name = name.replace('Model', '')
     key = obj.__key__ = getattr(obj, '__key__', _camel_case_convert(name))
@@ -57,19 +70,6 @@ def _unpack_obj(inst, obj):
 
 def _pack_obj(inst, obj):
     return ujson.dumps(obj, escape_forward_slashes=False)
-
-
-class _ModelBaseMeta(type):
-    __all_models__ = _all_models
-
-    def __init__(cls, name, bases_classes, attributes):
-        _init(cls, name)
-
-    def get_key(cls, sufix=None):
-        if not sufix or sufix == cls.__key__:
-            return cls.__key__
-
-        return '{}_{}'.format(cls.__key__, sufix)
 
 
 class _ModelBase(object):

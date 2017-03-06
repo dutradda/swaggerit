@@ -32,12 +32,28 @@ import random
 import asyncio
 
 
+class _ModelJobsMeta(_ModelSwaggerItMeta):
+
+    def __init__(cls, name, bases_classes, attributes):
+        _ModelSwaggerItMeta.__init__(cls, name, bases_classes, attributes)
+        _init(cls)
+
+
+def _init(obj):
+    obj._create_job = MethodType(_create_job, obj)
+    obj._job_watcher = MethodType(_job_watcher, obj)
+    obj._set_job = MethodType(_set_job, obj)
+    obj._build_jobs_key = MethodType(_build_jobs_key, obj)
+    obj._build_last_job_key = MethodType(_build_last_job_key, obj)
+    obj._get_job = MethodType(_get_job, obj)
+    obj._get_all_jobs = MethodType(_get_all_jobs, obj)
+    obj._copy_session = MethodType(_copy_session, obj)
+
 def _create_job(obj, func, jobs_id, req, session, *arg, **kwargs):
     job_hash = '{:x}'.format(random.getrandbits(128))
     job = partial(func, req, session, *arg, **kwargs)
     session.loop.run_in_executor(None, obj._job_watcher, jobs_id, job_hash, job, session)
     return obj._build_response(201, body=obj._pack_obj({'job_hash': job_hash}))
-
 
 def _job_watcher(obj, jobs_id, job_hash, job, session):
     asyncio.run_coroutine_threadsafe(
@@ -78,7 +94,6 @@ def _job_watcher(obj, jobs_id, job_hash, job, session):
     session.bind.close()
     session.close()
 
-
 async def _set_job(obj, jobs_id, job_hash, job_obj, session):
     key = obj._build_jobs_key(jobs_id)
     last_job_key = obj._build_last_job_key(jobs_id)
@@ -89,14 +104,11 @@ async def _set_job(obj, jobs_id, job_hash, job_obj, session):
         await session.redis_bind.expire(key, 7*24*60*60)
     await session.redis_bind.set(last_job_key, job_obj)
 
-
 def _build_jobs_key(obj, jobs_id):
     return jobs_id + '_jobs'
 
-
 def _build_last_job_key(obj, jobs_id):
     return jobs_id + '_last'
-
 
 async def _get_job(obj, jobs_id, req, session):
     job_hash = req.query.get('job_hash')
@@ -115,7 +127,6 @@ async def _get_job(obj, jobs_id, req, session):
     else:
         return obj._build_response(200, job_obj.decode())
 
-
 async def _get_all_jobs(obj, jobs_id, req, session):
     jobs = await session.redis_bind.hgetall(obj._build_jobs_key(jobs_id))
 
@@ -131,39 +142,8 @@ async def _get_all_jobs(obj, jobs_id, req, session):
 
         return obj._pack_obj(all_jobs).encode()
 
-
 def _copy_session(obj, session):
     return type(session)(bind=session.bind.engine.connect(),
                          redis_bind=session.redis_bind,
                          elsearch_bind=session.elsearch_bind,
                          loop=session.loop)
-
-
-class _ModelJobsMeta(_ModelSwaggerItMeta):
-
-    def __init__(cls, name, bases_classes, attributes):
-        _ModelSwaggerItMeta.__init__(cls, name, bases_classes, attributes)
-
-    def _create_job(cls, func, jobs_id, req, session, *arg, **kwargs):
-        return _create_job(cls, func, jobs_id, req, session, *arg, **kwargs)
-
-    def _job_watcher(cls, jobs_id, job_hash, job, session):
-        return _job_watcher(cls, jobs_id, job_hash, job, session)
-
-    async def _set_job(cls, jobs_id, job_hash, job_obj, session):
-        return await _set_job(cls, jobs_id, job_hash, job_obj, session)
-
-    def _build_jobs_key(cls, jobs_id):
-        return _build_jobs_key(cls, jobs_id)
-
-    def _build_last_job_key(cls, jobs_id):
-        return _build_last_job_key(cls, jobs_id)
-
-    async def _get_job(cls, jobs_id, req, session):
-        return await _get_job(cls, jobs_id, req, session)
-
-    async def _get_all_jobs(cls, jobs_id, req, session):
-        return await _get_all_jobs(cls, jobs_id, req, session)
-
-    def _copy_session(cls, session):
-        return _copy_session(cls, session)

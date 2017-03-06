@@ -31,6 +31,13 @@ import re
 import ujson
 
 
+class _ModelSwaggerItMeta(_ModelBaseMeta):
+
+    def __init__(cls, name, bases_classes, attributes):
+        _ModelBaseMeta.__init__(cls, name, bases_classes, attributes)
+        _init(cls)
+
+
 def _init(obj):
     SWAGGER_VALIDATOR.validate(obj.__schema__)
     _validate_operation(obj)
@@ -48,7 +55,6 @@ def _init(obj):
     _set_default_options(obj, model_name)
     obj._build_response = MethodType(_build_response, obj)
 
-
 def _format_definitions_names(obj, model_name):
     definitions = obj.__schema__.get('definitions', {})
     definitions_keys = list(definitions.keys())
@@ -59,7 +65,6 @@ def _format_definitions_names(obj, model_name):
     schema = re.sub(r'("\$ref":"#/definitions/)([^/"]+)', r'\1{}.\2'.format(model_name), schema)
     obj.__schema__ = ujson.loads(schema)
 
-
 def _format_operations_names(obj, model_name):
     for path_name, path in obj.__schema__.items():
         if path_name != 'definitions':
@@ -67,7 +72,6 @@ def _format_operations_names(obj, model_name):
                 if method_name != 'parameters':
                     op_id = method['operationId']
                     method['operationId'] = '{}.{}'.format(model_name, op_id)
-
 
 def _validate_operation(obj):
     for path in obj.__schema__:
@@ -78,7 +82,6 @@ def _validate_operation(obj):
                     if not hasattr(obj, operation_id):
                         raise SwaggerItModelError(
                             "'operationId' '{}' was not found".format(operation_id))
-
 
 def _set_default_options(obj, model_name):
     for path, schema in obj.__schema__.items():
@@ -94,17 +97,14 @@ def _set_default_options(obj, model_name):
             setattr(obj, options_operation_name, options_method)
             schema['options'] = _build_options_schema(options_operation_name, model_name)
 
-
 def _build_response(obj, status_code, body=None, headers={}):
     return SwaggerResponse(status_code, {}, body)
-
 
 def _options_operation_decor(headers):
     async def _options_operation(obj, req, sess):
         return SwaggerResponse(200, headers)
 
     return _options_operation
-
 
 def _build_options_schema(options_operation_name, model_name):
     return {
@@ -116,10 +116,3 @@ def _build_options_schema(options_operation_name, model_name):
             }
         }
     }
-
-
-class _ModelSwaggerItMeta(_ModelBaseMeta):
-
-    def __init__(cls, name, bases_classes, attributes):
-        _ModelBaseMeta.__init__(cls, name, bases_classes, attributes)
-        _init(cls)
