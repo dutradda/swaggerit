@@ -43,32 +43,34 @@ class Model1Swagger(ModelSQLAlchemyRedisBase):
     m2_id = sa.Column(sa.ForeignKey('model2_swagger.id'))
     model2_ = sa.orm.relationship('Model2Swagger')
 
-    __schema__ = {
-        '/model1/': {
-            'post': {
-                'operationId': 'swagger_insert',
-                'responses': {'200': {'description': 'test'}},
-                'parameters': [{
-                    'name': 'body',
-                    'in': 'body',
-                    'schema': {'type': 'array'}
-                }]
-            }
-        },
-        '/model1/{id}/': {
-            'patch': {
-                'operationId': 'swagger_update',
-                'responses': {'200': {'description': 'test'}},
-                'parameters': [{
-                    'name': 'body',
-                    'in': 'body',
-                    'schema': {'type': 'object'}
-                },{
-                    'name': 'id',
-                    'in': 'path',
-                    'required': True,
-                    'type': 'integer'
-                }]
+    __swagger_schema__ = {
+        'paths': {
+            '/model1/': {
+                'post': {
+                    'operationId': 'swagger_insert',
+                    'responses': {'200': {'description': 'test'}},
+                    'parameters': [{
+                        'name': 'body',
+                        'in': 'body',
+                        'schema': {'type': 'array'}
+                    }]
+                }
+            },
+            '/model1/{id}/': {
+                'patch': {
+                    'operationId': 'swagger_update',
+                    'responses': {'200': {'description': 'test'}},
+                    'parameters': [{
+                        'name': 'body',
+                        'in': 'body',
+                        'schema': {'type': 'object'}
+                    },{
+                        'name': 'id',
+                        'in': 'path',
+                        'required': True,
+                        'type': 'integer'
+                    }]
+                }
             }
         }
     }
@@ -78,7 +80,7 @@ class Model1Swagger(ModelSQLAlchemyRedisBase):
 def post_method():
     return SwaggerMethod(
         Model1Swagger.swagger_insert,
-        Model1Swagger.__schema__['/model1/']['post'],
+        Model1Swagger.__swagger_schema__['paths']['/model1/']['post'],
         {}, '')
 
 
@@ -195,7 +197,7 @@ class TestMethodErrorHandlingPost(object):
 def patch_method():
     return SwaggerMethod(
         Model1Swagger.swagger_update,
-        Model1Swagger.__schema__['/model1/{id}/']['patch'],
+        Model1Swagger.__swagger_schema__['paths']['/model1/{id}/']['patch'],
         {}, '')
 
 

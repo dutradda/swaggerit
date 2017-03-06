@@ -39,32 +39,34 @@ class Model1AioHttp(ModelSQLAlchemyRedisBase):
     m2_id = sa.Column(sa.ForeignKey('model2_aiohttp.id'))
     model2 = sa.orm.relationship('Model2AioHttp')
 
-    __schema__ = {
-        '/model1/': {
-            'post': {
-                'operationId': 'swagger_insert',
-                'responses': {'200': {'description': 'test'}},
-                'parameters': [{
-                    'name': 'body',
-                    'in': 'body',
-                    'schema': {'type': 'array'}
-                }]
-            }
-        },
-        '/model1/{id}/': {
-            'patch': {
-                'operationId': 'swagger_update',
-                'responses': {'200': {'description': 'test'}},
-                'parameters': [{
-                    'name': 'body',
-                    'in': 'body',
-                    'schema': {'type': 'object'}
-                },{
-                    'name': 'id',
-                    'in': 'path',
-                    'required': True,
-                    'type': 'integer'
-                }]
+    __swagger_schema__ = {
+        'paths': {
+            '/model1/': {
+                'post': {
+                    'operationId': 'swagger_insert',
+                    'responses': {'200': {'description': 'test'}},
+                    'parameters': [{
+                        'name': 'body',
+                        'in': 'body',
+                        'schema': {'type': 'array'}
+                    }]
+                }
+            },
+            '/model1/{id}/': {
+                'patch': {
+                    'operationId': 'swagger_update',
+                    'responses': {'200': {'description': 'test'}},
+                    'parameters': [{
+                        'name': 'body',
+                        'in': 'body',
+                        'schema': {'type': 'object'}
+                    },{
+                        'name': 'id',
+                        'in': 'path',
+                        'required': True,
+                        'type': 'integer'
+                    }]
+                }
             }
         }
     }

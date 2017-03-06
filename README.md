@@ -34,40 +34,42 @@ ModelSQLAlchemyRedisBase = FactoryOrmModels.make_sqlalchemy_redis_base()
 
 class Products(ModelSQLAlchemyRedisBase):
     __tablename__ = 'products'
-    __schema__ = {
-        '/products': {
-            'post': {
-                'parameters': [{
-                    'name': 'products_data',
-                    'in': 'body',
-                    'required': True,
-                    'schema': {
-                        'type': 'object',
-                        'required': ['name', 'brand'],
-                        'properties': {
-                            'name': {'type': 'string'},
-                            'brand': {'type': 'string'}
+    __swagger_schema__ = {
+        'paths': {
+            '/products': {
+                'post': {
+                    'parameters': [{
+                        'name': 'products_data',
+                        'in': 'body',
+                        'required': True,
+                        'schema': {
+                            'type': 'object',
+                            'required': ['name', 'brand'],
+                            'properties': {
+                                'name': {'type': 'string'},
+                                'brand': {'type': 'string'}
+                            }
                         }
-                    }
-                }],
-                'operationId': 'swagger_insert',
-                'responses': {'201': {'description': 'Created'}}
+                    }],
+                    'operationId': 'swagger_insert',
+                    'responses': {'201': {'description': 'Created'}}
+                },
+                'get': {
+                    'operationId': 'swagger_get_all',
+                    'responses': {'200': {'description': 'Got All'}}
+                }
             },
-            'get': {
-                'operationId': 'swagger_get_all',
-                'responses': {'200': {'description': 'Got All'}}
-            }
-        },
-        '/products/{id}': {
-            'parameters': [{
-                'name': 'id',
-                'in': 'path',
-                'required': True,
-                'type': 'integer'
-            }],
-            'get' : {
-                'operationId': 'swagger_get',
-                'responses': {'200': {'description': 'Got One'}}
+            '/products/{id}': {
+                'parameters': [{
+                    'name': 'id',
+                    'in': 'path',
+                    'required': True,
+                    'type': 'integer'
+                }],
+                'get' : {
+                    'operationId': 'swagger_get',
+                    'responses': {'200': {'description': 'Got One'}}
+                }
             }
         }
     }

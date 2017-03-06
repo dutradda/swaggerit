@@ -39,7 +39,7 @@ class _ModelSwaggerItMeta(_ModelBaseMeta):
 
 
 def _init(obj):
-    SWAGGER_VALIDATOR.validate(obj.__schema__)
+    SWAGGER_VALIDATOR.validate(obj.__swagger_schema__['paths'])
     _validate_operation(obj)
 
     if isinstance(obj, type):
@@ -56,36 +56,34 @@ def _init(obj):
     obj._build_response = MethodType(_build_response, obj)
 
 def _format_definitions_names(obj, model_name):
-    definitions = obj.__schema__.get('definitions', {})
+    definitions = obj.__swagger_schema__.get('definitions', {})
     definitions_keys = list(definitions.keys())
     for def_name in definitions_keys:
         definitions['{}.{}'.format(model_name, def_name)] = definitions.pop(def_name)
 
-    schema = ujson.dumps(obj.__schema__, escape_forward_slashes=False)
+    schema = ujson.dumps(obj.__swagger_schema__, escape_forward_slashes=False)
     schema = re.sub(r'("\$ref":"#/definitions/)([^/"]+)', r'\1{}.\2'.format(model_name), schema)
-    obj.__schema__ = ujson.loads(schema)
+    obj.__swagger_schema__ = ujson.loads(schema)
 
 def _format_operations_names(obj, model_name):
-    for path_name, path in obj.__schema__.items():
-        if path_name != 'definitions':
-            for method_name, method in path.items():
-                if method_name != 'parameters':
-                    op_id = method['operationId']
-                    method['operationId'] = '{}.{}'.format(model_name, op_id)
+    for path_name, path in obj.__swagger_schema__['paths'].items():
+        for method_name, method in path.items():
+            if method_name != 'parameters':
+                op_id = method['operationId']
+                method['operationId'] = '{}.{}'.format(model_name, op_id)
 
 def _validate_operation(obj):
-    for path in obj.__schema__:
-        if path != 'definitions':
-            for key, method_schema in obj.__schema__[path].items():
-                if key != 'parameters' and key != 'definitions':
-                    operation_id = method_schema['operationId']
-                    if not hasattr(obj, operation_id):
-                        raise SwaggerItModelError(
-                            "'operationId' '{}' was not found".format(operation_id))
+    for path, schema in obj.__swagger_schema__['paths'].items():
+        for key, method_schema in schema.items():
+            if key != 'parameters' and key != 'definitions':
+                operation_id = method_schema['operationId']
+                if not hasattr(obj, operation_id):
+                    raise SwaggerItModelError(
+                        "'operationId' '{}' was not found".format(operation_id))
 
 def _set_default_options(obj, model_name):
-    for path, schema in obj.__schema__.items():
-        if not 'options' in schema and path != 'definitions':
+    for path, schema in obj.__swagger_schema__['paths'].items():
+        if not 'options' in schema:
             path_norm = path.strip('/').replace('/', '_')
             path_norm = re.sub(r'(\{|<)([a-zA-Z_0-9-]+)(\}|>)', r'\2', path_norm)
             options_operation_name = '{}_{}'.format('options', path_norm) \

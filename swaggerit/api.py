@@ -48,11 +48,11 @@ class SwaggerAPI(metaclass=ABCMeta):
         self._elsearch_bind = elsearch_bind
         self._get_swagger_req_auth = get_swagger_req_auth
 
-        self._set_swagger_json(swagger_json_template, title, version)
+        self._set_swagger_json(swagger_json_template, title, version, models)
         self._set_models(models)
         self._set_swagger_doc(swagger_doc_url)
 
-    def _set_swagger_json(self, swagger_json_template, title, version):
+    def _set_swagger_json(self, swagger_json_template, title, version, models):
         self._validate_metadata(swagger_json_template, title, version)
         if swagger_json_template is None:
             swagger_json_template = deepcopy(SWAGGER_TEMPLATE)
@@ -63,12 +63,32 @@ class SwaggerAPI(metaclass=ABCMeta):
             raise SwaggerItAPIError("The Swagger Json 'paths' property will be populated "
                 "by the 'models' contents. This property must be empty.")
 
-        Draft4Validator(SWAGGER_SCHEMA).validate(swagger_json_template)
+        final_definitions = swagger_json_template.get('definitions', {})
+        final_paths = dict()
 
-        self.swagger_json = defaultdict(dict)
-        self.swagger_json.update(deepcopy(swagger_json_template))
-        definitions = self.swagger_json.get('definitions', {})
-        self.swagger_json['definitions'] = definitions
+        for model in models:
+            model_definitions = model.__swagger_schema__.get('definitions', {})
+            model_paths = model.__swagger_schema__['paths']
+            self._raise_duplicated_key_error('paths', final_paths, model_paths)
+            self._raise_duplicated_key_error('definitions', final_definitions, model_definitions)
+            final_paths.update(model_paths)
+            final_definitions.update(model_definitions)
+
+        swagger_json_template['paths'] = final_paths
+
+        if final_definitions:
+            swagger_json_template['definitions'] = final_definitions
+
+        Draft4Validator(SWAGGER_SCHEMA).validate(swagger_json_template)
+        self.swagger_json = swagger_json_template
+
+    def _raise_duplicated_key_error(self, name, set_, subset):
+        subset = set(subset.keys())
+        set_ = set(set_.keys())
+        if set_.intersection(subset):
+            raise SwaggerItAPIError(
+                "The Swagger Json {} '{}' are duplicated!".format(name, ', '.join(subset))
+            )
 
     def _validate_metadata(self, swagger_json_template, title, version):
         if bool(title is None) == bool(swagger_json_template is None):
@@ -84,9 +104,6 @@ class SwaggerAPI(metaclass=ABCMeta):
         for model in models:
             self.add_model(model)
 
-        if not self.swagger_json['definitions']:
-            self.swagger_json.pop('definitions')
-
     def add_model(self, model):
         if model.__api__ is not None:
             raise SwaggerItAPIError(
@@ -97,14 +114,6 @@ class SwaggerAPI(metaclass=ABCMeta):
         self._models.add(model)
         self._set_model_routes(model)
         model.__api__ = self
-        model_paths = deepcopy(model.__schema__)
-        model_paths.pop('definitions', None)
-        model_definitions = deepcopy(model.__schema__.get('definitions', {}))
-
-        self._validate_model('paths', model_paths, model.__name__)
-        self._validate_model('definitions', model_definitions, model.__name__)
-        self.swagger_json['paths'].update(model_paths)
-        self.swagger_json['definitions'].update(model_definitions)
 
     def _set_model_routes(self, model):
         for path, method, handler in self.get_model_methods(model):
@@ -112,32 +121,25 @@ class SwaggerAPI(metaclass=ABCMeta):
             self._set_route(path, method, handler)
 
     def get_model_methods(self, model):
-        for path, path_schema in model.__schema__.items():
-            if path != 'definitions':
-                all_methods_parameters = path_schema.get('parameters', [])
-                path = self._format_path(path)
+        for path, path_schema in model.__swagger_schema__['paths'].items():
+            all_methods_parameters = path_schema.get('parameters', [])
+            path = self._format_path(path)
 
-                for method in HTTP_METHODS:
-                    method_schema = path_schema.get(method)
+            for method in HTTP_METHODS:
+                method_schema = path_schema.get(method)
 
-                    if method_schema is not None:
-                        method_schema = deepcopy(method_schema)
-                        definitions = model.__schema__.get('definitions')
-                        parameters = method_schema.get('parameters', [])
-                        parameters.extend(all_methods_parameters)
+                if method_schema is not None:
+                    method_schema = deepcopy(method_schema)
+                    definitions = model.__swagger_schema__.get('definitions')
+                    parameters = method_schema.get('parameters', [])
+                    parameters.extend(all_methods_parameters)
 
-                        method_schema['parameters'] = parameters
-                        operation = getattr(model, method_schema['operationId'].split('.')[-1])
-                        handler = SwaggerMethod(operation, method_schema,
-                                               definitions, model.__schema_dir__,
-                                               authorizer=self.authorizer)
-                        yield path, method, handler
-
-    def _validate_model(self, key_name, keys, model_name):
-        for key in keys:
-            if key in self.swagger_json[key_name]:
-                raise SwaggerItAPIError("Duplicated {} '{}' for model '{}'"\
-                                        .format(key_name, key, model_name))
+                    method_schema['parameters'] = parameters
+                    operation = getattr(model, method_schema['operationId'].split('.')[-1])
+                    handler = SwaggerMethod(operation, method_schema,
+                                           definitions, model.__schema_dir__,
+                                           authorizer=self.authorizer)
+                    yield path, method, handler
 
     @abstractmethod
     def _set_handler_decorator(self, handler):

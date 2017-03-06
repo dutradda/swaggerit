@@ -31,42 +31,44 @@ import ujson
 
 
 class ModelAioHttpJobs(JobsModel):
-    __schema__ = {
-        '/': {
-            'post': {
-                'operationId': 'post_job',
-                'responses': {
-                    '201': {'description': 'Created'}
+    __swagger_schema__ = {
+        'paths': {
+            '/': {
+                'post': {
+                    'operationId': 'post_job',
+                    'responses': {
+                        '201': {'description': 'Created'}
+                    }
+                },
+                'get': {
+                    'parameters': [{
+                        'name': 'job_hash',
+                        'in': 'query',
+                        'type': 'string'
+                    }],
+                    'operationId': 'get_job',
+                    'responses': {
+                        '200': {'description': 'Got'}
+                    }
                 }
             },
-            'get': {
-                'parameters': [{
-                    'name': 'job_hash',
-                    'in': 'query',
-                    'type': 'string'
-                }],
-                'operationId': 'get_job',
-                'responses': {
-                    '200': {'description': 'Got'}
-                }
-            }
-        },
-        '/sync': {
-            'post': {
-                'operationId': 'post_sync_job',
-                'responses': {
-                    '201': {'description': 'Created'}
-                }
-            },
-            'get': {
-                'parameters': [{
-                    'name': 'job_hash',
-                    'in': 'query',
-                    'type': 'string'
-                }],
-                'operationId': 'get_sync_job',
-                'responses': {
-                    '200': {'description': 'Got'}
+            '/sync': {
+                'post': {
+                    'operationId': 'post_sync_job',
+                    'responses': {
+                        '201': {'description': 'Created'}
+                    }
+                },
+                'get': {
+                    'parameters': [{
+                        'name': 'job_hash',
+                        'in': 'query',
+                        'type': 'string'
+                    }],
+                    'operationId': 'get_sync_job',
+                    'responses': {
+                        '200': {'description': 'Got'}
+                    }
                 }
             }
         }
