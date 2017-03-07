@@ -21,17 +21,17 @@
 # SOFTWARE.
 
 
-from swaggerit.utils import build_validator, get_model_schema, get_dir_path
+from swaggerit.utils import build_validator, get_swagger_json, get_dir_path
 import os.path
 
 
 HTTP_METHODS = ('delete', 'get', 'head', 'options', 'patch', 'post', 'put')
 
 
-SWAGGER_JSON_TEMPLATE = get_model_schema(__file__, 'swagger_template.json')
+SWAGGER_JSON_TEMPLATE = get_swagger_json(__file__, 'swagger_template.json')
 
 
-SWAGGER_SCHEMA = get_model_schema(__file__, 'swagger_schema_extended.json')
+SWAGGER_SCHEMA = get_swagger_json(__file__, 'swagger_schema_extended.json')
 
 
 SWAGGER_VALIDATOR = build_validator(

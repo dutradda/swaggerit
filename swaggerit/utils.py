@@ -50,8 +50,11 @@ def get_dir_path(filename):
     return os.path.dirname(os.path.abspath(filename))
 
 
-def get_model_schema(filename, schema_name='swagger_schema.json'):
-    return ujson.load(open(os.path.join(get_dir_path(filename), schema_name)))
+def get_swagger_json(current_filename, swagger_json_name=None):
+    if swagger_json_name is None:
+        swagger_json_name = 'swagger.json'
+
+    return ujson.load(open(os.path.join(get_dir_path(current_filename), swagger_json_name)))
 
 
 def get_module_path(cls):
