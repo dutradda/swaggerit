@@ -39,7 +39,7 @@ class Model1AioHttp(ModelSQLAlchemyRedisBase):
     m2_id = sa.Column(sa.ForeignKey('model2_aiohttp.id'))
     model2 = sa.orm.relationship('Model2AioHttp')
 
-    __swagger_schema__ = {
+    __swagger_json__ = {
         'paths': {
             '/model1/': {
                 'post': {

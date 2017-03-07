@@ -46,7 +46,7 @@ class FactoryOrmModels(object):
             attributes['__key__'] = key
 
         if schema is not None:
-            attributes['__swagger_schema__'] = schema
+            attributes['__swagger_json__'] = schema
 
         if key_separator is not None:
             attributes['__key_separator__'] = key_separator

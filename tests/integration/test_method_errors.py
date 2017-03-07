@@ -43,7 +43,7 @@ class Model1Swagger(ModelSQLAlchemyRedisBase):
     m2_id = sa.Column(sa.ForeignKey('model2_swagger.id'))
     model2_ = sa.orm.relationship('Model2Swagger')
 
-    __swagger_schema__ = {
+    __swagger_json__ = {
         'paths': {
             '/model1/': {
                 'post': {
@@ -80,7 +80,7 @@ class Model1Swagger(ModelSQLAlchemyRedisBase):
 def post_method():
     return SwaggerMethod(
         Model1Swagger.swagger_insert,
-        Model1Swagger.__swagger_schema__['paths']['/model1/']['post'],
+        Model1Swagger.__swagger_json__['paths']['/model1/']['post'],
         {}, '')
 
 
@@ -197,7 +197,7 @@ class TestMethodErrorHandlingPost(object):
 def patch_method():
     return SwaggerMethod(
         Model1Swagger.swagger_update,
-        Model1Swagger.__swagger_schema__['paths']['/model1/{id}/']['patch'],
+        Model1Swagger.__swagger_json__['paths']['/model1/{id}/']['patch'],
         {}, '')
 
 

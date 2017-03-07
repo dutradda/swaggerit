@@ -30,8 +30,8 @@ class SwaggerItModel(_ModelBase):
 
     def __init__(self, key_sufix=None, schema=None):
         _ModelBase.__init__(self, key_sufix)
-        schema = type(self).__swagger_schema__ if schema is None else schema
-        self.__swagger_schema__ = deepcopy(schema)
+        schema = type(self).__swagger_json__ if schema is None else schema
+        self.__swagger_json__ = deepcopy(schema)
         _init(self)
         self.__name__ = type(self).__name__
 

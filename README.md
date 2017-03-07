@@ -34,7 +34,7 @@ ModelSQLAlchemyRedisBase = FactoryOrmModels.make_sqlalchemy_redis_base()
 
 class Products(ModelSQLAlchemyRedisBase):
     __tablename__ = 'products'
-    __swagger_schema__ = {
+    __swagger_json__ = {
         'paths': {
             '/products': {
                 'post': {

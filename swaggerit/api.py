@@ -25,7 +25,7 @@ from swaggerit.method import SwaggerMethod
 from swaggerit.response import SwaggerResponse
 from swaggerit.models.orm.session import Session
 from swaggerit.exceptions import SwaggerItAPIError
-from swaggerit.constants import SWAGGER_TEMPLATE, SWAGGER_SCHEMA, HTTP_METHODS
+from swaggerit.constants import SWAGGER_JSON_TEMPLATE, SWAGGER_SCHEMA, HTTP_METHODS
 from swaggerit.utils import set_logger
 from collections import namedtuple, defaultdict
 from jsonschema import Draft4Validator, ValidationError
@@ -33,41 +33,36 @@ from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 import ujson
 import re
+import asyncio
 
 
 class SwaggerAPI(metaclass=ABCMeta):
 
     def __init__(self, models, sqlalchemy_bind=None, redis_bind=None,
-                 elsearch_bind=None, swagger_json_template=None, title=None,
-                 version='1.0.0', authorizer=None, get_swagger_req_auth=True,
-                 swagger_doc_url='doc'):
+                   elsearch_bind=None, swagger_json_template=None, title=None,
+                   version='1.0.0', authorizer=None, get_swagger_req_auth=True,
+                   swagger_doc_url='doc', redis_bind_sync=None):
+        self._validate_metadata(swagger_json_template, title, version)
+
         set_logger(self)
         self.authorizer = authorizer
         self._sqlalchemy_bind = sqlalchemy_bind
         self._redis_bind = redis_bind
         self._elsearch_bind = elsearch_bind
         self._get_swagger_req_auth = get_swagger_req_auth
-
-        self._set_swagger_json(swagger_json_template, title, version, models)
+        self._redis_bind_sync = redis_bind_sync
+        self._set_swagger_json_template(swagger_json_template, title, version)
+        self._validate_swagger_json(models)
         self._set_models(models)
         self._set_swagger_doc(swagger_doc_url)
 
-    def _set_swagger_json(self, swagger_json_template, title, version, models):
-        self._validate_metadata(swagger_json_template, title, version)
-        if swagger_json_template is None:
-            swagger_json_template = deepcopy(SWAGGER_TEMPLATE)
-            swagger_json_template['info']['title'] = title
-            swagger_json_template['info']['version'] = version
-
-        if swagger_json_template['paths']:
-            raise SwaggerItAPIError("The Swagger Json 'paths' property will be populated "
-                "by the 'models' contents. This property must be empty.")
-
-        final_definitions = swagger_json_template.get('definitions', {})
+    def _validate_swagger_json(self, models):
+        swagger_json = deepcopy(self._swagger_json_template)
+        final_definitions = swagger_json.get('definitions', {})
         final_paths = dict()
 
         for model in models:
-            model_swagger_schema = model.get_swagger_schema()
+            model_swagger_schema = self._get_model_swagger_schema(model)
             model_definitions = model_swagger_schema.get('definitions', {})
             model_paths = model_swagger_schema['paths']
             self._raise_duplicated_key_error('paths', final_paths, model_paths)
@@ -75,21 +70,11 @@ class SwaggerAPI(metaclass=ABCMeta):
             final_paths.update(model_paths)
             final_definitions.update(model_definitions)
 
-        swagger_json_template['paths'] = final_paths
-
+        swagger_json['paths'] = final_paths
         if final_definitions:
-            swagger_json_template['definitions'] = final_definitions
+            swagger_json['definitions'] = final_definitions
 
-        Draft4Validator(SWAGGER_SCHEMA).validate(swagger_json_template)
-        self.swagger_json = swagger_json_template
-
-    def _raise_duplicated_key_error(self, name, set_, subset):
-        subset = set(subset.keys())
-        set_ = set(set_.keys())
-        if set_.intersection(subset):
-            raise SwaggerItAPIError(
-                "The Swagger Json {} '{}' are duplicated!".format(name, ', '.join(subset))
-            )
+        Draft4Validator(SWAGGER_SCHEMA).validate(swagger_json)
 
     def _validate_metadata(self, swagger_json_template, title, version):
         if bool(title is None) == bool(swagger_json_template is None):
@@ -99,6 +84,32 @@ class SwaggerAPI(metaclass=ABCMeta):
         if version != '1.0.0' and swagger_json_template is not None:
             raise SwaggerItAPIError("'version' argument can't be setted when "
                                   "'swagger_json_template' was setted.")
+
+    def _set_swagger_json_template(self, swagger_json_template, title, version):
+        if swagger_json_template is None:
+            swagger_json_template = deepcopy(SWAGGER_JSON_TEMPLATE)
+            swagger_json_template['info']['title'] = title
+            swagger_json_template['info']['version'] = version
+
+        if swagger_json_template.get('paths'):
+            raise SwaggerItAPIError("The Swagger Json 'paths' property will be populated "
+                "by the 'models' contents. This property must be empty.")
+
+        self._swagger_json_template = swagger_json_template
+
+    def _raise_duplicated_key_error(self, name, set_, subset):
+        subset = set(subset.keys())
+        set_ = set(set_.keys())
+        if set_.intersection(subset):
+            raise SwaggerItAPIError(
+                "The Swagger Json {} '{}' are duplicated!".format(name, ', '.join(subset))
+            )
+
+    def _get_model_swagger_schema(self, model):
+        session = self._build_session()
+        ret = model.get_swagger_schema(session)
+        self._destroy_session(session)
+        return ret
 
     def _set_models(self, models):
         self._models = set()
@@ -122,7 +133,7 @@ class SwaggerAPI(metaclass=ABCMeta):
             self._set_route(path, method, handler)
 
     def get_model_methods(self, model):
-        model_swagger_schema = model.get_swagger_schema()
+        model_swagger_schema = self._get_model_swagger_schema(model)
 
         for path, path_schema in model_swagger_schema['paths'].items():
             all_methods_parameters = path_schema.get('parameters', [])
@@ -193,11 +204,16 @@ class SwaggerAPI(metaclass=ABCMeta):
         return Session(bind=self._sqlalchemy_bind,
                        redis_bind=self._redis_bind,
                        elsearch_bind=self._elsearch_bind,
+                       redis_bind_sync=self._redis_bind_sync,
                        loop=self.loop)
 
     def _destroy_session(self, session):
         if hasattr(session, 'close'):
             session.close()
+
+    @abstractmethod
+    def _set_swagger_doc(self, swagger_doc_url):
+        pass
 
     async def _authorize(self, req, session):
         if self.authorizer and self._get_swagger_req_auth:
@@ -205,6 +221,21 @@ class SwaggerAPI(metaclass=ABCMeta):
             if response is not None:
                 return response
 
-    @abstractmethod
-    def _set_swagger_doc(self, swagger_doc_url):
-        pass
+    @property
+    def swagger_json(self):
+        swagger_json = deepcopy(self._swagger_json_template)
+        final_definitions = swagger_json.get('definitions', {})
+        final_paths = dict()
+
+        for model in self._models:
+            model_swagger_schema = self._get_model_swagger_schema(model)
+            model_definitions = model_swagger_schema.get('definitions', {})
+            model_paths = model_swagger_schema['paths']
+            final_paths.update(model_paths)
+            final_definitions.update(model_definitions)
+
+        swagger_json['paths'] = final_paths
+        if final_definitions:
+            swagger_json['definitions'] = final_definitions
+
+        return swagger_json

@@ -28,7 +28,7 @@ import os.path
 HTTP_METHODS = ('delete', 'get', 'head', 'options', 'patch', 'post', 'put')
 
 
-SWAGGER_TEMPLATE = get_model_schema(__file__, 'swagger_template.json')
+SWAGGER_JSON_TEMPLATE = get_model_schema(__file__, 'swagger_template.json')
 
 
 SWAGGER_SCHEMA = get_model_schema(__file__, 'swagger_schema_extended.json')

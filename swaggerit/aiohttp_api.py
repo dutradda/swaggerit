@@ -27,6 +27,7 @@ from aiohttp.web import Application, Response as AioHttpResponse
 from aiohttp_swagger import setup_swagger
 from urllib.parse import parse_qs
 from tempfile import NamedTemporaryFile
+import ujson
 
 
 class AioHttpAPI(SwaggerAPI, Application):
@@ -93,3 +94,7 @@ class AioHttpAPI(SwaggerAPI, Application):
             return await func(req)
 
         return decorator
+
+    def __getitem__(self, k):
+        if k == 'SWAGGER_DEF_CONTENT':
+            return ujson.dumps(self.swagger_json, escape_forward_slashes=True)

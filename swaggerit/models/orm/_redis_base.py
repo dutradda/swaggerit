@@ -29,7 +29,7 @@ from swaggerit.exceptions import SwaggerItModelError
 class _ModelRedisBaseMeta(_ModelSwaggerItOrmMeta):
 
     def __init__(cls, name, bases_classes, attributes):
-        if hasattr(cls, '__swagger_schema__'):
+        if hasattr(cls, '__swagger_json__'):
             _ModelSwaggerItOrmMeta.__init__(cls, name, bases_classes, attributes)
         else:
             _ModelBaseMeta.__init__(cls, name, bases_classes, attributes)

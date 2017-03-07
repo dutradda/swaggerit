@@ -31,7 +31,7 @@ import ujson
 
 
 class ModelAioHttpJobs(JobsModel):
-    __swagger_schema__ = {
+    __swagger_json__ = {
         'paths': {
             '/': {
                 'post': {

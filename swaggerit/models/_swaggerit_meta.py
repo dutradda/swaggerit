@@ -38,7 +38,7 @@ class _ModelSwaggerItMeta(_ModelBaseMeta):
 
 
 def _init(obj):
-    SWAGGER_VALIDATOR.validate(obj.__swagger_schema__['paths'])
+    SWAGGER_VALIDATOR.validate(obj.__swagger_json__['paths'])
     _validate_operation(obj)
 
     if isinstance(obj, type):
@@ -56,24 +56,24 @@ def _init(obj):
     set_method(obj, get_swagger_schema)
 
 def _format_definitions_names(obj, model_name):
-    definitions = obj.__swagger_schema__.get('definitions', {})
+    definitions = obj.__swagger_json__.get('definitions', {})
     definitions_keys = list(definitions.keys())
     for def_name in definitions_keys:
         definitions['{}.{}'.format(model_name, def_name)] = definitions.pop(def_name)
 
-    schema = ujson.dumps(obj.__swagger_schema__, escape_forward_slashes=False)
+    schema = ujson.dumps(obj.__swagger_json__, escape_forward_slashes=False)
     schema = re.sub(r'("\$ref":"#/definitions/)([^/"]+)', r'\1{}.\2'.format(model_name), schema)
-    obj.__swagger_schema__ = ujson.loads(schema)
+    obj.__swagger_json__ = ujson.loads(schema)
 
 def _format_operations_names(obj, model_name):
-    for path_name, path in obj.__swagger_schema__['paths'].items():
+    for path_name, path in obj.__swagger_json__['paths'].items():
         for method_name, method in path.items():
             if method_name != 'parameters':
                 op_id = method['operationId']
                 method['operationId'] = '{}.{}'.format(model_name, op_id)
 
 def _validate_operation(obj):
-    for path, schema in obj.__swagger_schema__['paths'].items():
+    for path, schema in obj.__swagger_json__['paths'].items():
         for key, method_schema in schema.items():
             if key != 'parameters' and key != 'definitions':
                 operation_id = method_schema['operationId']
@@ -82,7 +82,7 @@ def _validate_operation(obj):
                         "'operationId' '{}' was not found".format(operation_id))
 
 def _set_default_options(obj, model_name):
-    for path, schema in obj.__swagger_schema__['paths'].items():
+    for path, schema in obj.__swagger_json__['paths'].items():
         if not 'options' in schema:
             path_norm = path.strip('/').replace('/', '_')
             path_norm = re.sub(r'(\{|<)([a-zA-Z_0-9-]+)(\}|>)', r'\2', path_norm)
@@ -114,5 +114,5 @@ def _build_options_schema(options_operation_name, model_name):
         }
     }
 
-def get_swagger_schema(obj):
-    return obj.__swagger_schema__
+def get_swagger_schema(obj, *args, **kwargs):
+    return obj.__swagger_json__
