@@ -38,6 +38,9 @@ class _ModelSwaggerItMeta(_ModelBaseMeta):
 
 
 def _init(obj):
+    if not 'paths' in obj.__swagger_json__:
+        raise SwaggerItModelError("The 'paths' property of swagger json is mandatory.")
+
     SWAGGER_VALIDATOR.validate(obj.__swagger_json__['paths'])
     _validate_operation(obj)
 
