@@ -22,6 +22,7 @@
 
 
 from jsonschema import Draft4Validator, RefResolver
+from types import MethodType
 import os.path
 import logging
 import ujson
@@ -75,3 +76,11 @@ from swaggerit.models._base import _all_models
 
 def get_model(key):
     return _all_models[key]
+
+
+def set_method(obj, method, method_name=None):
+    if method_name is None:
+        method_name = method.__name__
+
+    if not hasattr(obj, method_name):
+        setattr(obj, method_name, MethodType(method, obj))

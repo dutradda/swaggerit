@@ -24,9 +24,8 @@
 from swaggerit.models._base import _ModelBaseMeta, _ModelBase
 from swaggerit.constants import SWAGGER_VALIDATOR
 from swaggerit.exceptions import SwaggerItModelError
-from swaggerit.utils import get_module_path
+from swaggerit.utils import get_module_path, set_method
 from swaggerit.response import SwaggerResponse
-from types import MethodType
 import re
 import ujson
 
@@ -53,7 +52,8 @@ def _init(obj):
     obj.__api__ = getattr(obj, '__api__', None)
     obj.__schema_dir__ = getattr(obj, '__schema_dir__', get_module_path(obj))
     _set_default_options(obj, model_name)
-    obj._build_response = MethodType(_build_response, obj)
+    set_method(obj, _build_response)
+    set_method(obj, get_swagger_schema)
 
 def _format_definitions_names(obj, model_name):
     definitions = obj.__swagger_schema__.get('definitions', {})
@@ -91,8 +91,7 @@ def _set_default_options(obj, model_name):
 
             valid_methods = [k.upper() for k in schema.keys()]
             headers = {'Allow': ', '.join(valid_methods)}
-            options_method = MethodType(_options_operation_decor(headers), obj)
-            setattr(obj, options_operation_name, options_method)
+            set_method(obj, _options_operation_decor(headers), options_operation_name)
             schema['options'] = _build_options_schema(options_operation_name, model_name)
 
 def _build_response(obj, status_code, body=None, headers={}):
@@ -114,3 +113,6 @@ def _build_options_schema(options_operation_name, model_name):
             }
         }
     }
+
+def get_swagger_schema(obj):
+    return obj.__swagger_schema__

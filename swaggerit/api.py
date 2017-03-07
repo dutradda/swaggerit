@@ -67,8 +67,9 @@ class SwaggerAPI(metaclass=ABCMeta):
         final_paths = dict()
 
         for model in models:
-            model_definitions = model.__swagger_schema__.get('definitions', {})
-            model_paths = model.__swagger_schema__['paths']
+            model_swagger_schema = model.get_swagger_schema()
+            model_definitions = model_swagger_schema.get('definitions', {})
+            model_paths = model_swagger_schema['paths']
             self._raise_duplicated_key_error('paths', final_paths, model_paths)
             self._raise_duplicated_key_error('definitions', final_definitions, model_definitions)
             final_paths.update(model_paths)
@@ -121,7 +122,9 @@ class SwaggerAPI(metaclass=ABCMeta):
             self._set_route(path, method, handler)
 
     def get_model_methods(self, model):
-        for path, path_schema in model.__swagger_schema__['paths'].items():
+        model_swagger_schema = model.get_swagger_schema()
+
+        for path, path_schema in model_swagger_schema['paths'].items():
             all_methods_parameters = path_schema.get('parameters', [])
             path = self._format_path(path)
 
@@ -130,7 +133,7 @@ class SwaggerAPI(metaclass=ABCMeta):
 
                 if method_schema is not None:
                     method_schema = deepcopy(method_schema)
-                    definitions = model.__swagger_schema__.get('definitions')
+                    definitions = model_swagger_schema.get('definitions')
                     parameters = method_schema.get('parameters', [])
                     parameters.extend(all_methods_parameters)
 

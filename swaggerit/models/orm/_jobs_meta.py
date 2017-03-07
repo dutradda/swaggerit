@@ -23,11 +23,11 @@
 
 from swaggerit.response import SwaggerResponse
 from swaggerit.models._swaggerit_meta import _ModelSwaggerItMeta
+from swaggerit.utils import set_method
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from collections import defaultdict
 from datetime import datetime
-from types import MethodType
 import random
 import asyncio
 
@@ -40,14 +40,14 @@ class _ModelJobsMeta(_ModelSwaggerItMeta):
 
 
 def _init(obj):
-    obj._create_job = MethodType(_create_job, obj)
-    obj._job_watcher = MethodType(_job_watcher, obj)
-    obj._set_job = MethodType(_set_job, obj)
-    obj._build_jobs_key = MethodType(_build_jobs_key, obj)
-    obj._build_last_job_key = MethodType(_build_last_job_key, obj)
-    obj._get_job = MethodType(_get_job, obj)
-    obj._get_all_jobs = MethodType(_get_all_jobs, obj)
-    obj._copy_session = MethodType(_copy_session, obj)
+    set_method(obj, _create_job)
+    set_method(obj, _job_watcher)
+    set_method(obj, _set_job)
+    set_method(obj, _build_jobs_key)
+    set_method(obj, _build_last_job_key)
+    set_method(obj, _get_job)
+    set_method(obj, _get_all_jobs)
+    set_method(obj, _copy_session)
 
 def _create_job(obj, func, jobs_id, req, session, *arg, **kwargs):
     job_hash = '{:x}'.format(random.getrandbits(128))
