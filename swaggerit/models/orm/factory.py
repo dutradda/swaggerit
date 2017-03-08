@@ -34,13 +34,15 @@ class FactoryOrmModels(object):
     def make_redis_elsearch(
             cls, class_name, id_names, key=None, base=object,
             schema=None, key_separator=None,
-            metaclass=ModelRedisElSearchMeta, use_elsearch=False
+            metaclass=ModelRedisElSearchMeta,
+            use_elsearch=False, extra_attributes={}
         ):
 
         attributes = {
             '__id_names__': sorted(tuple(id_names)),
             '__use_elsearch__': use_elsearch
         }
+        attributes.update(extra_attributes)
 
         if key is not None:
             attributes['__key__'] = key
