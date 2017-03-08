@@ -56,7 +56,6 @@ def _init(obj):
     obj.__schema_dir__ = getattr(obj, '__schema_dir__', get_module_path(obj))
     _set_default_options(obj, model_name)
     set_method(obj, _build_response)
-    set_method(obj, get_swagger_schema)
 
 def _format_definitions_names(obj, model_name):
     definitions = obj.__swagger_json__.get('definitions', {})
@@ -116,6 +115,3 @@ def _build_options_schema(options_operation_name, model_name):
             }
         }
     }
-
-def get_swagger_schema(obj, *args, **kwargs):
-    return obj.__swagger_json__

@@ -62,7 +62,7 @@ class SwaggerAPI(metaclass=ABCMeta):
         final_paths = dict()
 
         for model in models:
-            model_swagger_schema = self._get_model_swagger_schema(model)
+            model_swagger_schema = model.__swagger_json__
             model_definitions = model_swagger_schema.get('definitions', {})
             model_paths = model_swagger_schema['paths']
             self._raise_duplicated_key_error('paths', final_paths, model_paths)
@@ -105,12 +105,6 @@ class SwaggerAPI(metaclass=ABCMeta):
                 "The Swagger Json {} '{}' are duplicated!".format(name, ', '.join(subset))
             )
 
-    def _get_model_swagger_schema(self, model):
-        session = self._build_session()
-        ret = model.get_swagger_schema(session)
-        self._destroy_session(session)
-        return ret
-
     def _set_models(self, models):
         self._models = set()
         for model in models:
@@ -133,7 +127,7 @@ class SwaggerAPI(metaclass=ABCMeta):
             self._set_route(path, method, handler)
 
     def get_model_methods(self, model):
-        model_swagger_schema = self._get_model_swagger_schema(model)
+        model_swagger_schema = model.__swagger_json__
 
         for path, path_schema in model_swagger_schema['paths'].items():
             all_methods_parameters = path_schema.get('parameters', [])
@@ -228,7 +222,7 @@ class SwaggerAPI(metaclass=ABCMeta):
         final_paths = dict()
 
         for model in self._models:
-            model_swagger_schema = self._get_model_swagger_schema(model)
+            model_swagger_schema = model.__swagger_json__
             model_definitions = model_swagger_schema.get('definitions', {})
             model_paths = model_swagger_schema['paths']
             final_paths.update(model_paths)

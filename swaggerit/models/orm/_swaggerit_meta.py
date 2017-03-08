@@ -100,6 +100,3 @@ class _ModelSwaggerItOrmMeta(_ModelJobsMeta):
         method = getattr(cls, 'search', lambda *args, **kwargs: None)
         operation = partial(method, session, **req.query)
         return await cls._execute_operation(operation, 200)
-
-    def get_swagger_schema(obj, session):
-        return obj.__swagger_json__
