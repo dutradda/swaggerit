@@ -57,6 +57,7 @@ class _ModelSQLAlchemyRedisBaseInitMetaMixin(DeclarativeMeta, _ModelRedisBaseMet
             cls._set_backrefs_for_all_models(all_models)
 
         else:
+            _ModelRedisBaseMeta.__init__(cls, name, bases_classes, attributes)
             cls.__model_base__ = cls
 
     def _set_primaries_keys(cls):

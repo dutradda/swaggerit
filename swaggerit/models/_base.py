@@ -45,14 +45,16 @@ class _ModelBaseMeta(type):
 
 
 def _init(obj, name):
-    name = name.replace('Model', '')
-    key = obj.__key__ = getattr(obj, '__key__', _camel_case_convert(name))
+    if hasattr(obj, '__model_base__'):
+        name = name.replace('Model', '')
+        key = obj.__key__ = getattr(obj, '__key__', _camel_case_convert(name))
 
-    if key in _all_models:
-        raise SwaggerItModelError("The model '{}' was already registered with name '{}'."
-            .format(_all_models[key].__name__, key))
+        if key in _all_models:
+            raise SwaggerItModelError("The model '{}' was already registered with name '{}'."
+                .format(_all_models[key].__name__, key))
 
-    _all_models[key] = obj
+        _all_models[key] = obj
+
     set_logger(obj)
     obj.get_model = MethodType(_get_model, obj)
     obj._unpack_obj = MethodType(_unpack_obj, obj)

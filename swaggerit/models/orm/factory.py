@@ -40,7 +40,8 @@ class FactoryOrmModels(object):
 
         attributes = {
             '__id_names__': sorted(tuple(id_names)),
-            '__use_elsearch__': use_elsearch
+            '__use_elsearch__': use_elsearch,
+            '__model_base__': base
         }
         attributes.update(extra_attributes)
 
@@ -54,8 +55,6 @@ class FactoryOrmModels(object):
             attributes['__key_separator__'] = key_separator
 
         class_ = metaclass(class_name, (base,), attributes)
-        class_.update = MethodType(metaclass.update, class_)
-        class_.get = MethodType(metaclass.get, class_)
         return class_
 
     @staticmethod

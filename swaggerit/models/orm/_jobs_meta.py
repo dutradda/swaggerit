@@ -21,8 +21,8 @@
 # SOFTWARE.
 
 
-from swaggerit.response import SwaggerResponse
 from swaggerit.models._swaggerit_meta import _ModelSwaggerItMeta
+from swaggerit.models._base import _ModelBaseMeta
 from swaggerit.utils import set_method
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
@@ -125,7 +125,7 @@ async def _get_job(obj, jobs_id, req, session):
     if job_obj is None:
         return obj._build_response(404)
     else:
-        return obj._build_response(200, job_obj.decode())
+        return obj._build_response(200, body=job_obj.decode())
 
 async def _get_all_jobs(obj, jobs_id, req, session):
     jobs = await session.redis_bind.hgetall(obj._build_jobs_key(jobs_id))

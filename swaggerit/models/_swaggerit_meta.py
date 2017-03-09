@@ -38,24 +38,26 @@ class _ModelSwaggerItMeta(_ModelBaseMeta):
 
 
 def _init(obj):
-    if not 'paths' in obj.__swagger_json__:
-        raise SwaggerItModelError("The 'paths' property of swagger json is mandatory.")
-
-    SWAGGER_VALIDATOR.validate(obj.__swagger_json__['paths'])
-    _validate_operation(obj)
-
-    if isinstance(obj, type):
-        model_name = obj.__name__
-    else:
-        model_name = type(obj).__name__
-
-    _format_definitions_names(obj, model_name)
-    _format_operations_names(obj, model_name)
-
-    obj.__api__ = getattr(obj, '__api__', None)
-    obj.__schema_dir__ = getattr(obj, '__schema_dir__', get_module_path(obj))
-    _set_default_options(obj, model_name)
     set_method(obj, _build_response)
+
+    if hasattr(obj, '__model_base__') and hasattr(obj, '__swagger_json__'):
+        if not 'paths' in obj.__swagger_json__:
+            raise SwaggerItModelError("The 'paths' property of swagger json is mandatory.")
+
+        SWAGGER_VALIDATOR.validate(obj.__swagger_json__['paths'])
+        _validate_operation(obj)
+
+        if isinstance(obj, type):
+            model_name = obj.__name__
+        else:
+            model_name = type(obj).__name__
+
+        _format_definitions_names(obj, model_name)
+        _format_operations_names(obj, model_name)
+
+        obj.__api__ = getattr(obj, '__api__', None)
+        obj.__schema_dir__ = getattr(obj, '__schema_dir__', get_module_path(obj))
+        _set_default_options(obj, model_name)
 
 def _format_definitions_names(obj, model_name):
     definitions = obj.__swagger_json__.get('definitions', {})
@@ -96,12 +98,12 @@ def _set_default_options(obj, model_name):
             set_method(obj, _options_operation_decor(headers), options_operation_name)
             schema['options'] = _build_options_schema(options_operation_name, model_name)
 
-def _build_response(obj, status_code, body=None, headers={}):
-    return SwaggerResponse(status_code, {}, body)
+def _build_response(obj, status_code, headers=None, body=None):
+    return SwaggerResponse(status_code, headers, body)
 
 def _options_operation_decor(headers):
     async def _options_operation(obj, req, sess):
-        return SwaggerResponse(200, headers)
+        return obj._build_response(200, headers)
 
     return _options_operation
 

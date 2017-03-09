@@ -21,7 +21,6 @@
 # SOFTWARE.
 
 
-from swaggerit.response import SwaggerResponse
 from swaggerit.exceptions import SwaggerItModelError
 from swaggerit.models.orm._jobs_meta import _ModelJobsMeta
 from sqlalchemy.exc import IntegrityError
@@ -40,7 +39,7 @@ class _ModelSwaggerItOrmMeta(_ModelJobsMeta):
             }
             if len(error.args) > 1:
                 error_obj['instance'] = error.args[1]
-            return SwaggerResponse(400, body=cls._pack_obj(error_obj))
+            return cls._build_response(400, body=cls._pack_obj(error_obj))
 
         except IntegrityError as error:
             error_obj = {
@@ -52,17 +51,17 @@ class _ModelSwaggerItOrmMeta(_ModelJobsMeta):
             }
             if len(error.detail):
                 error_obj['details'] = error.detail
-            return SwaggerResponse(400, body=cls._pack_obj(error_obj))
+            return cls._build_response(400, body=cls._pack_obj(error_obj))
 
         else:
             if has_404 and not objs:
-                return SwaggerResponse(404)
+                return cls._build_response(404)
             else:
                 if pack_first:
                     body = cls._pack_obj(objs[0])
                 else:
                     body = cls._pack_obj(objs)
-                return SwaggerResponse(status_code, body=body)
+                return cls._build_response(status_code, body=body)
 
     async def swagger_insert(cls, req, session):
         operation = partial(cls.insert, session, req.body, **req.query)

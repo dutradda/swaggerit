@@ -21,23 +21,19 @@
 # SOFTWARE.
 
 
-from swaggerit.models._base import _ModelBaseMeta
 from swaggerit.models.orm._swaggerit_meta import _ModelSwaggerItOrmMeta
+from swaggerit.models._base import _ModelBaseMeta
 from swaggerit.exceptions import SwaggerItModelError
 
 
 class _ModelRedisBaseMeta(_ModelSwaggerItOrmMeta):
 
     def __init__(cls, name, bases_classes, attributes):
-        if hasattr(cls, '__swagger_json__'):
-            _ModelSwaggerItOrmMeta.__init__(cls, name, bases_classes, attributes)
-        else:
-            _ModelBaseMeta.__init__(cls, name, bases_classes, attributes)
+        if hasattr(cls, '__model_base__') and not getattr(cls, '__id_names__', None):
+                raise SwaggerItModelError("Class attribute '__id_names__' must be setted "
+                                          "and must contains at least one name.")
 
-        if not getattr(cls, '__id_names__', None):
-            raise SwaggerItModelError("Class attribute '__id_names__' must be setted "
-                                      "and must contains at least one name.")
-
+        _ModelSwaggerItOrmMeta.__init__(cls, name, bases_classes, attributes)
         cls.__key_separator__ = getattr(cls, '__key_separator__', b'|')
 
     def _to_list(cls, objs):
