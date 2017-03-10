@@ -41,7 +41,7 @@ class _ModelSQLAlchemyRedisBaseInitMetaMixin(DeclarativeMeta, _ModelRedisBaseMet
 
         if hasattr(cls, '__model_base__'):
             cls._set_primaries_keys()
-            cls.__id_names__ = sorted(cls.__primaries_keys__.keys())
+            cls.__id_names__ = getattr(cls, '__id_names__', sorted(cls.__primaries_keys__.keys()))
             cls.__key__ = str(cls.__table__.name)
 
             _ModelRedisBaseMeta.__init__(cls, name, bases_classes, attributes)
@@ -292,7 +292,7 @@ class ModelSQLAlchemyRedisBaseMeta(
     def get_ids_from_values(cls, values):
         cast = lambda id_name, value: getattr(cls, id_name).type.python_type(value) \
             if value is not None else None
-        return {id_name: cast(id_name, values.get(id_name)) for id_name in cls.__primaries_keys__}
+        return {id_name: cast(id_name, values.get(id_name)) for id_name in cls.__id_names__}
 
     def build_filters_by_ids(cls, ids):
         if len(ids) == 1:
