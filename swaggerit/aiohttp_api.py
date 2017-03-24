@@ -98,3 +98,5 @@ class AioHttpAPI(SwaggerAPI, Application):
     def __getitem__(self, k):
         if k == 'SWAGGER_DEF_CONTENT':
             return ujson.dumps(self.swagger_json, escape_forward_slashes=True)
+        else:
+            return super().__getitem__(k)
