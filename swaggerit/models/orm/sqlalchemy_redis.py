@@ -337,7 +337,7 @@ class ModelSQLAlchemyRedisBaseSuper(object):
         for key, value in kwargs.items():
             await self._setattr(key, value, session, input_)
 
-        self._validate()
+        await self._validate(session, input_)
 
     async def _setattr(self, attr_name, value, session, input_):
         cls = type(self)
@@ -455,7 +455,7 @@ class ModelSQLAlchemyRedisBaseSuper(object):
             if rel_inst not in getattr(self, attr_name):
                 getattr(self, attr_name).append(rel_inst)
 
-    def _validate(self):
+    async def _validate(self, session, input_):
         pass
 
     def get_related(self, session):
