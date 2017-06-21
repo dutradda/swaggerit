@@ -27,7 +27,7 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.ext.declarative.clsregistry import _class_resolver
 from sqlalchemy.orm.properties import RelationshipProperty, ColumnProperty
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, inspect
 from collections import OrderedDict
 from copy import deepcopy
 import ujson
@@ -364,8 +364,14 @@ class ModelSQLAlchemyRedisBaseSuper(object):
         rel_insts = await self._get_instances_from_values(session, rel_model, values_list)
 
         for rel_values, rel_inst in zip(values_list, rel_insts):
-            await self._do_nested_operation(rel_values, rel_inst,
-                                            attr_name, relationship, session, input_)
+            if rel_inst is not None and rel_values.get('_operation') == 'delete':
+                values_list.remove(rel_values)
+                rel_insts.remove(rel_inst)
+                await type(rel_inst).delete(session, rel_inst.get_ids_map(), commit=True)
+
+        for rel_values, rel_inst in zip(values_list, rel_insts):
+                await self._do_nested_operation(rel_values, rel_inst,
+                                                attr_name, relationship, session, input_)
 
     async def _get_instances_from_values(self, session, rel_model, rels_values):
         ids_to_get = self._get_ids_from_rels_values(rel_model, rels_values)
@@ -406,10 +412,6 @@ class ModelSQLAlchemyRedisBaseSuper(object):
             self._do_get(attr_name, relationship, rel_inst)
             await rel_inst.init(session, input_, **rel_values)
 
-        elif operation == 'delete':
-            rel_model = type(rel_inst)
-            await rel_model.delete(session, rel_inst.get_ids_map(), commit=False)
-
         elif operation == 'remove':
             self._do_remove(attr_name, relationship, rel_inst, input_)
 
@@ -418,7 +420,7 @@ class ModelSQLAlchemyRedisBaseSuper(object):
 
     def _do_get(self, attr_name, relationship, rel_inst):
         if relationship.prop.uselist is True:
-            if rel_inst not in getattr(self, attr_name):
+            if rel_inst not in getattr(self, attr_name) and inspect(rel_inst).persistent:
                 getattr(self, attr_name).append(rel_inst)
 
         else:
