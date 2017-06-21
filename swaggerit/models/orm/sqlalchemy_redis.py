@@ -363,7 +363,7 @@ class ModelSQLAlchemyRedisBaseSuper(object):
 
         rel_insts = await self._get_instances_from_values(session, rel_model, values_list)
 
-        for rel_values, rel_inst in zip(values_list, rel_insts):
+        for rel_values, rel_inst in zip(list(values_list), list(rel_insts)):
             if rel_inst is not None and rel_values.get('_operation') == 'delete':
                 values_list.remove(rel_values)
                 rel_insts.remove(rel_inst)
