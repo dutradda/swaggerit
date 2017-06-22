@@ -128,8 +128,18 @@ class SwaggerAPI(metaclass=ABCMeta):
 
     def get_model_methods(self, model):
         model_swagger_schema = model.__swagger_json__
+        paths_items_without_brackets = []
+        paths_items_with_brackets = []
 
         for path, path_schema in model_swagger_schema['paths'].items():
+            if '{' in path and '}' in path:
+                paths_items_with_brackets.append((path, path_schema))
+            else:
+                paths_items_without_brackets.append((path, path_schema))
+
+        paths_items = paths_items_without_brackets + paths_items_with_brackets
+
+        for path, path_schema in paths_items:
             all_methods_parameters = path_schema.get('parameters', [])
             path = self._format_path(path)
 
