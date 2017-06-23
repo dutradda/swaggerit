@@ -202,6 +202,7 @@ class _ModelSQLAlchemyRedisBaseGetMetaMixin(type):
                     if value and isinstance(value[0], dict):
                         query, filters = cls._get_query_and_filters_by_relationship(
                             prop_name, value, kwargs, query)
+
                     else:
                         filters = cls.build_filters_by_ids([{prop_name: v} for v in value])
 
@@ -223,7 +224,11 @@ class _ModelSQLAlchemyRedisBaseGetMetaMixin(type):
 
         ids = cls._to_list(value)
         filters = model.build_filters_by_ids(ids)
-        query = query.join(join)
+
+        if join is secondary:
+            query = query.join(join).join(model)
+        else:
+            query = query.join(join)
 
         return query, filters
 
