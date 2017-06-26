@@ -25,7 +25,7 @@ from swaggerit.json_builder import JsonBuilder
 from swaggerit.utils import build_validator, set_logger
 from swaggerit.request import SwaggerRequest
 from swaggerit.response import SwaggerResponse
-from jsonschema import ValidationError
+from jsonschema import ValidationError, SchemaError
 from copy import deepcopy
 import ujson
 
@@ -125,7 +125,8 @@ class SwaggerMethod(object):
             path_params = self._build_non_body_params(self._path_validator,
                                                                req.path_params)
             headers_params = self._build_non_body_params(self._headers_validator, dict(req.headers))
-        except ValidationError as error:
+
+        except (ValidationError, SchemaError) as error:
             return self._valdation_error_to_response(error, response_headers)
 
         req = SwaggerRequest(
@@ -145,7 +146,7 @@ class SwaggerMethod(object):
             else:
                 resp = await self._operation(req, session)
 
-        except ValidationError as error:
+        except (ValidationError, SchemaError) as error:
             return self._valdation_error_to_response(error, response_headers)
 
         except Exception as error:

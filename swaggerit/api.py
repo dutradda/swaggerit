@@ -28,7 +28,7 @@ from swaggerit.exceptions import SwaggerItAPIError
 from swaggerit.constants import SWAGGER_JSON_TEMPLATE, SWAGGER_SCHEMA, HTTP_METHODS
 from swaggerit.utils import set_logger
 from collections import namedtuple, defaultdict
-from jsonschema import Draft4Validator, ValidationError
+from jsonschema import Draft4Validator, ValidationError, SchemaError
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 import ujson
@@ -168,23 +168,7 @@ class SwaggerAPI(metaclass=ABCMeta):
             response_headers = {'content-type': 'application/json'}
             session = self._build_session()
 
-            try:
-                response = await method(req, session)
-
-            except ValidationError as error:
-                body = {
-                    'message': error.message
-                }
-                if isinstance(error.schema, dict) and len(error.schema):
-                    body['schema'] = error.schema
-                if error.instance:
-                    body['instance'] = error.instance
-                response = SwaggerResponse(400, body=ujson.dumps(body), headers=response_headers)
-
-            except Exception as error:
-                body = ujson.dumps({'message': 'Something unexpected happened'})
-                self._logger.exception('ERROR Unexpected')
-                response = SwaggerResponse(500, body=body, headers=response_headers)
+            response = await method(req, session)
 
             self._destroy_session(session)
             return response
