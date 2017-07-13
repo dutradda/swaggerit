@@ -5,5 +5,5 @@ hiredis==0.2.*
 aioredis==0.2.*
 aiohttp==1.*
 uvloop==0.7.*
-https://github.com/dutradda/aiohttp-swagger/archive/extended.tar.gz
-https://github.com/dutradda/aioes/archive/extended.tar.gz
+aiohttp-swagger==1.*
+aioes==0.7.*
