@@ -53,7 +53,7 @@ class _ModelSQLAlchemyRedisBaseInitMetaMixin(DeclarativeMeta, _ModelRedisBaseMet
             cls.__use_redis__ = getattr(cls, '__use_redis__', True)
             cls.__todict_schema__ = {}
             all_models = [m for m in cls.__all_models__.values()
-                          if issubclass(m, cls.__model_base__)]
+                          if isinstance(m, type) and issubclass(m, cls.__model_base__)]
             cls._set_backrefs_for_all_models(all_models)
 
         else:
