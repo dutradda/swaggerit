@@ -130,8 +130,10 @@ class SwaggerMethod(object):
             return self._valdation_error_to_response(error, response_headers)
 
         req = SwaggerRequest(
-            req.url,
+            req.path,
             req.method,
+            scheme=req.scheme,
+            host=req.host,
             path_params=path_params,
             query=query_params,
             headers=headers_params,

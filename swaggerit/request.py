@@ -25,17 +25,19 @@ from collections import namedtuple
 
 
 _SwaggerRequest = namedtuple('SwaggerRequest', [
-    'url', 'method', 'path_params', 'query',
+    'path', 'method', 'scheme', 'host', 'path_params', 'query',
      'headers', 'body', 'body_schema', 'context'
 ])
 
 
 class SwaggerRequest(_SwaggerRequest):
 
-    def __new__(cls, url, method, *, path_params=None, query=None,
+    def __new__(cls, path, method, *, scheme=None, host=None, path_params=None, query=None,
                 headers=None, body=None, body_schema=None, context=None):
         return _SwaggerRequest.__new__(
-            cls, url, method,
+            cls, path, method,
+            scheme=scheme,
+            host=host,
             path_params={} if path_params is None else path_params,
             query={} if query is None else query,
             headers={} if headers is None else headers,

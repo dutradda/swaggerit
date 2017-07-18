@@ -64,6 +64,7 @@ class AioHttpAPI(SwaggerAPI, Application):
         body = req.content if req.has_body else None
         return SwaggerRequest(
             req.path, req.method.lower(),
+            scheme=req.scheme, host=req.host,
             path_params=dict(req.match_info),
             query=query, headers=headers,
             body=body)
