@@ -38,6 +38,9 @@ class ModelRedisElSearchMeta(_ModelRedisBaseMeta):
         counter = 0
 
         for obj in objs:
+            if not cls._validate(obj):
+                continue
+
             obj_key = cls.get_instance_key(obj)
             ids_objs_map[obj_key] = cls._pack_obj(obj)
             counter += 1
@@ -58,6 +61,9 @@ class ModelRedisElSearchMeta(_ModelRedisBaseMeta):
                 await session.elsearch_bind.bulk_create_dict(cls.__key__, ids_objs_map)
 
         return objs
+
+    def _validate(cls, obj):
+        return True
 
     async def update(cls, session, objs, ids=None, **kwargs):
         input_ = deepcopy(objs)
@@ -86,6 +92,9 @@ class ModelRedisElSearchMeta(_ModelRedisBaseMeta):
                 if obj.get('_operation') == 'delete':
                     keys_objs_to_del[key] = obj
                     keys_objs_map.pop(key)
+                    continue
+
+                elif not cls._validate(obj):
                     continue
 
                 set_map[key] = cls._pack_obj(obj)
