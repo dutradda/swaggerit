@@ -36,12 +36,14 @@ class _SessionBase(SessionSA):
             expire_on_commit=True, _enable_transaction_accounting=True,
             autocommit=False, twophase=False, weak_identity_map=True,
             binds=None, extension=None, info=None, query_cls=Query,
-            redis_bind=None, elsearch_bind=None, loop=None, redis_bind_sync=None):
+            redis_bind=None, elsearch_bind=None, loop=None, redis_bind_sync=None,
+            redis_bind_cy=None):
         self.redis_bind = redis_bind
         self.elsearch_bind = elsearch_bind
         self.user = None
         self.loop = loop
         self.redis_bind_sync = redis_bind_sync
+        self.redis_bind_cy = redis_bind_cy
         self._clean_redis_sets()
         SessionSA.__init__(
             self, bind=bind, autoflush=autoflush, expire_on_commit=expire_on_commit,
