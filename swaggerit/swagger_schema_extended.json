@@ -1,5 +1,6 @@
 {
-  "title": "A Extended JSON Schema for Swagger 2.0 API.",
+  "title": "An Extended JSON Schema for Swagger 2.0 API.",
+  "id": "http://cdn.rawgit.com/dutradda/swaggerit/master/swaggerit/swagger_schema_extended.json#",
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
   "required": [
@@ -179,9 +180,15 @@
         },
         "^/": {
           "$ref": "#/definitions/pathItem"
-        },
-        "definitions": {
-          "$ref": "http://json-schema.org/draft-04/schema#/properties/definitions"
+        }
+      },
+      "properties": {
+        "allOf": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/paths"
+          }
         }
       },
       "additionalProperties": false
@@ -190,6 +197,15 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/definitions/schema"
+      },
+      "properties": {
+        "allOf": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/definitions"
+          }
+        }
       },
       "description": "One or more JSON objects describing the schemas being consumed and produced by the API."
     },
@@ -205,7 +221,7 @@
       "additionalProperties": {
         "$ref": "#/definitions/response"
       },
-      "description": "One or more JSON representations for parameters"
+      "description": "One or more JSON representations for responses"
     },
     "externalDocs": {
       "type": "object",
