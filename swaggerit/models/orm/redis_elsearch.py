@@ -132,6 +132,19 @@ class ModelRedisElSearchMeta(_ModelRedisBaseMeta):
 
         return keys_objs_map
 
+    async def atomic_update(cls, session, update, id_):
+        obj = await cls.get(session, id_)
+        if obj:
+            obj[0].update(update)
+        else:
+            return None
+
+        result = await cls.update(session, obj, skip_validation=True)
+        if result:
+            return result[0]
+        else:
+            return None
+
     async def delete(cls, session, ids, **kwargs):
         keys = cls._to_list(ids)
         if keys:

@@ -75,6 +75,10 @@ class _ModelSwaggerItOrmMeta(_ModelJobsMeta):
         operation = partial(cls.update, session, req.body, **req.query)
         return await cls._execute_operation(operation, 200)
 
+    async def swagger_atomic_update(cls, req, session):
+        operation = partial(cls.atomic_update, session, req.body, ids=[req.path_params], **req.query)
+        return await cls._execute_operation(operation, 200)
+
     async def swagger_delete(cls, req, session):
         operation = partial(cls.delete, session, ids=[req.path_params], **req.query)
         return await cls._execute_operation(operation, 204, False)

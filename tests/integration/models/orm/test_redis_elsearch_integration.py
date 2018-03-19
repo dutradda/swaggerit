@@ -59,6 +59,16 @@ class TestModelRedisElSearchPost(object):
         obj['id'] = 2
         assert await ModelTest.update(session, obj, '1') == [obj]
 
+    async def test_atomic_update(self, obj, session):
+        await ModelTest.insert(session, obj)
+        update = {'field3': 'testing3'}
+        obj.update(update)
+        assert await ModelTest.atomic_update(session, update, '1') == obj
+
+    async def test_atomic_update_invalid(self, obj, session):
+        update = {'field3': 'testing3'}
+        assert await ModelTest.atomic_update(session, update, '1') == None
+
     async def test_delete(self, obj, session):
         await ModelTest.insert(session, obj)
         assert await ModelTest.delete(session, '1') == 1
