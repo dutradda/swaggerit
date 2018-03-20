@@ -3,4 +3,6 @@ omit =
     version.py
     *__init__*
 
-branch = True
+[report]
+exclude_lines =
+    pragma: no cover

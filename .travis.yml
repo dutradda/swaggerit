@@ -1,14 +1,13 @@
 language: python
 python:
   - "3.5"
-  - "3.6"
 services:
   - mysql
   - redis
   - elasticsearch
-script: py.test -c pytest-travis.ini
 install:
-  - pip install -r requirements.txt -r requirements-dev.txt
-  - pip install coveralls
+  - pip install "setuptools>=30" tox tox-travis coveralls
+script:
+  - tox
 after_success:
   - coveralls

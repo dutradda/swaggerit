@@ -1,13 +1,17 @@
 version: "2"
 services:
     mysql:
-        image: wangxian/alpine-mysql
+        image: mysql
         container_name: swaggerit-mysql
         environment:
             MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: swaggerit_test
     redis:
-        image: redis:alpine
+        image: redis
         container_name: swaggerit-redis
+    elsearch:
+        image: elasticsearch
+        container_name: swaggerit-elsearch
     swaggerit:
         build: .
         image: swaggerit
@@ -17,9 +21,12 @@ services:
         depends_on:
             - mysql
             - redis
+            - elsearch
         links:
             - mysql:swaggerit-mysql
             - redis:swaggerit-redis
+            - elsearch:swaggerit-elsearch
         volumes:
             - $SWAGGERIT_DEV_HOME:/swaggerit
-            - $MYRECO_DEV_HOME:/myreco
+        environment:
+            - TOXENV

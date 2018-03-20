@@ -1,5 +1,5 @@
 #!/bin/bash
 
+export LANG=C.UTF-8
 cd /swaggerit
-pip install -r requirements-dev.txt -r requirements.txt
-py.test -c pytest-docker.ini $@
+tox -c tox-docker.ini

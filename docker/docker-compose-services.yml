@@ -1,0 +1,20 @@
+version: "2"
+services:
+    mysql:
+        image: mysql
+        container_name: swaggerit-mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: swaggerit_test
+        ports:
+            - 3306:3306
+    redis:
+        image: redis
+        container_name: swaggerit-redis
+        ports:
+            - 6379:6379
+    elsearch:
+        image: elasticsearch
+        container_name: swaggerit-elsearch
+        ports:
+            - 9200:9200

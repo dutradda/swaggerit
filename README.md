@@ -1,7 +1,6 @@
-[![Build Status](https://travis-ci.org/dutradda/swaggerit.svg?branch=master)](https://travis-ci.org/dutradda/swaggerit)
-[![Coverage Status](https://coveralls.io/repos/github/dutradda/swaggerit/badge.svg?branch=master)](https://coveralls.io/github/dutradda/swaggerit?branch=master)
+# Swagger It &middot; [![Build Status](https://travis-ci.org/dutradda/swaggerit.svg?branch=master)](https://travis-ci.org/dutradda/swaggerit) [![Coverage Status](https://coveralls.io/repos/github/dutradda/swaggerit/badge.svg?branch=master)](https://coveralls.io/github/dutradda/swaggerit?branch=master) [![PyPi Last Version](https://img.shields.io/pypi/v/swaggerit.svg)](https://pypi.python.org/pypi/swaggerit) [![PyPi Develop Status](https://img.shields.io/pypi/status/swaggerit.svg)](https://pypi.python.org/pypi/swaggerit) [![Python Versions](https://img.shields.io/pypi/pyversions/swaggerit.svg)](https://pypi.python.org/pypi/swaggerit) [![License](https://img.shields.io/pypi/l/swaggerit.svg)](https://github.com/dutradda/swaggerit/blob/master/LICENSE)
 
-# swaggerit
+
 Create a swagger API from a set of classes.
 
 

@@ -8,11 +8,11 @@
     },
     "redis": {
         "host": "swaggerit-redis",
-	"port": 6379,
-	"db": 0
+        "port": 6379,
+        "db": 0
     },
     "elsearch": {
-        "host": "localhost",
+        "host": "swaggerit-elsearch",
         "port": 9200,
         "index": "swaggerit_test"
     }

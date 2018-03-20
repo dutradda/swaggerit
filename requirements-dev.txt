@@ -1,6 +1,0 @@
-pytest==3.*
-pytest-cov==2.*
-pytest-variables[hjson]==1.*
-pytest-aiohttp==0.1.*
-ipython==5.*
-PyMySQL==0.7.*
