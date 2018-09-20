@@ -47,9 +47,9 @@ install_requires = [
     'jsonschema==2.*',
     'ujson==1.*',
     'hiredis==0.2.*',
-    'aioredis==0.2.*',
-    'aiohttp==1.*',
-    'uvloop==0.7.*',
+    'aioredis==1.*',
+    'aiohttp==2.*',
+    'uvloop==0.11.*',
     'aiohttp-swagger==1.*',
     'aioes==0.7.*'
 ]

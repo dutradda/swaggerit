@@ -48,11 +48,8 @@ class ElSearchBind(object):
                 for key in keys]
         return await self._client.bulk(body, index=self._index, doc_type=doc_type)
 
-    def close(self):
-        self._client.close()
-
-    def __del__(self):
-        self.close()
+    async def close(self):
+        await self._client.close()
 
     async def create_index(self):
         if not (await self._client.indices.exists(self._index)):
