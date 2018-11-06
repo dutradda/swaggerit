@@ -39,9 +39,10 @@ import asyncio
 class SwaggerAPI(metaclass=ABCMeta):
 
     def __init__(self, models, sqlalchemy_bind=None, redis_bind=None,
-                   elsearch_bind=None, swagger_json_template=None, title=None,
-                   version='1.0.0', authorizer=None, get_swagger_req_auth=True,
-                   swagger_doc_url='doc', redis_bind_sync=None, redis_bind_cy=None):
+                 elsearch_bind=None, swagger_json_template=None, title=None,
+                 version='1.0.0', authorizer=None, get_swagger_req_auth=True,
+                 swagger_doc_url='doc', redis_bind_sync=None, redis_bind_cy=None,
+                 storage_bind=None, storage_bind_sync=None):
         self._validate_metadata(swagger_json_template, title, version)
 
         set_logger(self)
@@ -52,6 +53,8 @@ class SwaggerAPI(metaclass=ABCMeta):
         self._get_swagger_req_auth = get_swagger_req_auth
         self._redis_bind_sync = redis_bind_sync
         self._redis_bind_cy = redis_bind_cy
+        self._storage_bind = storage_bind
+        self._storage_bind_sync = storage_bind_sync
         self._set_swagger_json_template(swagger_json_template, title, version)
         self._validate_swagger_json(models)
         self._set_models(models)
@@ -195,6 +198,8 @@ class SwaggerAPI(metaclass=ABCMeta):
                        elsearch_bind=self._elsearch_bind,
                        redis_bind_sync=self._redis_bind_sync,
                        redis_bind_cy=self._redis_bind_cy,
+                       storage_bind=self._storage_bind,
+                       storage_bind_sync=self._storage_bind_sync,
                        loop=self.loop)
 
     def _destroy_session(self, session):
